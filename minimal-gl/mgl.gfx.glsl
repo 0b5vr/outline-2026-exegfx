@@ -1,13 +1,26 @@
-/* framework header */
-#version 430
-layout(location = 0) out vec4 fragColor;
-layout(location = 0) uniform vec4 resolution;
-layout(location = 1) uniform int frame;
+#version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
+// #define INTERACTIVE_CAMERA
 
+layout(binding = 0) uniform sampler2D backBuffer;
+layout(binding = 1) uniform sampler2D accumBuffer;
+layout(location = 0) uniform int waveOutPosition;
+#if defined(EXPORT_EXECUTABLE)
+  vec2 resolution = {SCREEN_XRESO, SCREEN_YRESO};
+  #define NUM_SAMPLES_PER_SEC 48000.
+  float time = waveOutPosition / NUM_SAMPLES_PER_SEC;
+#else
+  layout(location = 2) uniform float time;
+  layout(location = 3) uniform vec2 resolution;
+  #ifdef INTERACTIVE_CAMERA
+    layout(location = 6) uniform float tanFovY;
+    layout(location = 7) uniform mat4 cameraInWorld;
+  #endif
+#endif
 
+layout(location = 0) out vec4 outColor;   // display (tonemapped)
+layout(location = 1) out vec4 outAccum;   // accumulation: xyz = color sum, w = sample count
 
-/* vvv your shader goes here vvv */
 
 const float MTL_WALL = 1.0;
 const float MTL_WALL2 = 2.0;
@@ -33,6 +46,8 @@ const int PATH_ITER = 5;
 const int MARCH_ITER = 80;
 
 // #define DEBUG_NORMAL
+
+float mgl_frame;
 
 // == common =======================================================================================
 uvec3 seed;
@@ -88,7 +103,7 @@ vec3 cyclicNoise(vec3 p) {
   vec3 sum = vec3(0);
 
   for (int i = 0; i ++ < 5;) {
-    p *= 2.0 * orthBas(vec3(3.0, 4.0, -5.0));
+    p = p * 2.0 * orthBas(vec3(3.0, 4.0, -5.0));
     p += sin(p.yzx);
     sum = sum * 2.0 + cross(cos(p), sin(p.zxy));
   }
@@ -215,24 +230,24 @@ float mapChrome(vec3 p) {
   );
 }
 
-// == main =========================================================================================
-void main() {
-  fragColor *= 0.0;
+// == draw =========================================================================================
+vec4 draw() {
+  vec4 fragColor = vec4(0.0);
 
   vec2 uv = gl_FragCoord.xy / resolution.xy;
   vec2 p = (uv - 0.5);
   p.x *= resolution.x / resolution.y;
 
-  vec3 seed = hash3f(vec3(p, frame));
+  vec3 seed = hash3f(vec3(p, mgl_frame));
 
   for (int i = 0; i ++ < SAMPLES_PER_FRAME;) {
     // -- create ray -------------------------------------------------------------------------------
     vec2 pt = (p * rotate2D(0.01) + seed.xy / resolution.y);
     seed = hash3f(seed);
-    // #ifdef INTERACTIVE_CAMERA
-    //   vec3 ro = cameraInWorld[3].xyz;
-    //   vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
-    // #else
+    #ifdef INTERACTIVE_CAMERA
+      vec3 ro = cameraInWorld[3].xyz;
+      vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
+    #else
       vec3 ro = vec3(-1.2, 1.6, 11.0);
       vec3 rd = normalize(vec3(pt, -4.0));
       rd.zx *= rotate2D(0.12);
@@ -240,7 +255,7 @@ void main() {
       vec3 rt = ro + rd * 10.0;
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
       rd = normalize(rt - ro);
-    // #endif
+    #endif
 
     vec3 beta = vec3(2.0 - length(p));
 
@@ -801,9 +816,9 @@ void main() {
       float sqRoughness = i_roughness * i_roughness;
       float sqSqRoughness = sqRoughness * sqRoughness;
 
-      // #ifdef DEBUG_NORMAL
-      //   return vec4(0.5 + 0.5 * isect.xyz, 1.0);
-      // #endif
+      #ifdef DEBUG_NORMAL
+        return vec4(0.5 + 0.5 * isect.xyz, 1.0);
+      #endif
 
       seed = hash3f(seed);
 
@@ -891,4 +906,70 @@ void main() {
   }
 
   fragColor.w = float(SAMPLES_PER_FRAME);
+  return fragColor;
+}
+
+// == present ======================================================================================
+vec3 present(vec3 color) {
+  // ACES filmic tone mapping
+  // Ref: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl
+  color *= mat3(
+    0.59719, 0.35458, 0.04823,
+    0.07600, 0.90834, 0.01566,
+    0.02840, 0.13383, 0.83777
+  );
+
+  vec3 i_a = color * (color + 0.0245786) - 0.000090537;
+  vec3 i_b = color * (0.983729 * color + 0.4329510) + 0.238081;
+  color = i_a / i_b;
+
+  color *= mat3(
+    1.60475, -0.53108, -0.07367,
+    -0.10208,  1.10813, -0.00605,
+    -0.00327, -0.07276,  1.07602
+  );
+
+  color = clamp(color, 0.0, 1.0);
+
+  // sRGB OETF
+  color = mix(
+    color * 12.92,
+    pow(color, vec3(0.4167)) * 1.055 - 0.055,
+    step(0.0031308, color)
+  );
+
+  // color grading
+  color = mix(vec3(0.03), vec3(0.9), color);
+
+  return color;
+}
+
+// == main =========================================================================================
+void main() {
+  #ifdef INTERACTIVE_CAMERA
+    vec3 cameraStateHash = hash3f(
+      cameraInWorld[0].xyz
+      + cameraInWorld[1].xyz
+      + cameraInWorld[2].xyz
+      + cameraInWorld[3].xyz
+      + tanFovY
+    );
+
+    if (floor(gl_FragCoord.xy) == vec2(0)) {
+      outColor = vec4(cameraStateHash, 1.0);
+      return;
+    }
+
+    bool isCameraChanged = length(cameraStateHash - texelFetch(backBuffer, ivec2(0), 0).xyz) > 0.01;
+  #else
+    bool isCameraChanged = false;
+  #endif
+
+  vec4 accumPrev = time < 0.1 || isCameraChanged
+    ? vec4(0.0)
+    : texelFetch(accumBuffer, ivec2(gl_FragCoord.xy), 0);
+  mgl_frame = accumPrev.w;
+
+  outAccum = accumPrev + draw();
+  outColor = vec4(present(outAccum.rgb / outAccum.a), 1.0);
 }

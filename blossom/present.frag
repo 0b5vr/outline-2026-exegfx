@@ -40,7 +40,7 @@ void main() {
   );
 
   // color grading
-  color = mix(vec3(-0.1, 0.05, 0.05), vec3(1.1, 1.0, 0.9), color);
+  color = mix(vec3(0.03), vec3(0.9), color);
 
   fragColor = vec4(color,1);
 }
