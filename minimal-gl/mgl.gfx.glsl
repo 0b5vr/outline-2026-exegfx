@@ -81,24 +81,6 @@ mat3 orthBas(vec3 z) {
 }
 
 // == noise ========================================================================================
-vec3 perlin23(vec2 p) {
-  vec2 cell = floor(p);
-  vec2 t = fract(p);
-  vec2 ts = (t * t * t * (t * (t * 6.0 - 15.0) + 10.0));
-
-  vec2 v;
-  vec3 dice;
-  vec3 sum = vec3(0);
-
-  for (int i = 0; i ++ < 8;) {
-    v = vec2(ivec2(i - 1) >> ivec2(0, 1) & 1);
-    dice = TAU * hash3f(mod((cell + v).xxy, 256.0));
-    sum += mix(1.0 - ts, ts, v).x * mix(1.0 - ts, ts, v).y * (t - v).xxy * mat3(vec3(0, cis(dice.x)), vec3(0, cis(dice.y)), vec3(0, cis(dice.z)));
-  }
-
-  return sum;
-}
-
 vec3 cyclicNoise(vec3 p) {
   vec3 sum = vec3(0);
 
@@ -534,9 +516,8 @@ vec4 draw() {
           vec3(0.3, 0.0, 0.0)
         );
 
-        vec3 i_noise = perlin23(2.0 * perlin23(20.0 * rpt.xy).xy);
+        vec3 i_noise = cyclicNoise(8.0 * cyclicNoise(4.0 * rp));
         isect.xyz = normalize(isect.xyz + 0.1 * i_noise);
-        // material[0] = 0.5 + 0.5 * i_noise;
       } else if (material[2].z == MTL_WALL_BAR) {
         material = mat3(
           vec3(0.5),
@@ -681,17 +662,15 @@ vec4 draw() {
             // panels
             material = mat3(
               vec3(0.8),
-              vec3(0.0),
-              vec3(0.5, 0.0, 0.0)
+              vec3(0),
+              vec3(0.5, 0, 0)
             );
-            vec3 i_noise = perlin23(rp.xz + 4.0 * tileZ);
-            isect.xyz = normalize(vec3(0, -1, 0) + 0.04 * i_noise);
           } else {
             // gap
             material = mat3(
               vec3(0.02),
-              vec3(0.0),
-              vec3(0.8, 0.0, 0.0)
+              vec3(0),
+              vec3(0.8, 0, 0)
             );
           }
         }
