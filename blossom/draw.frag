@@ -10,7 +10,6 @@ layout(location = 1) uniform int frame;
 /* vvv your shader goes here vvv */
 
 const float MTL_WALL = 1.0;
-const float MTL_WALL2 = 2.0;
 const float MTL_FLOOR = 3.0;
 const float MTL_CEIL = 4.0;
 const float MTL_CHROME_SPHERE = 5.0;
@@ -115,11 +114,6 @@ void minSdArcPath(vec2 p, inout float d, float x0, float y0, float x1, float y1,
 }
 
 // == isects =======================================================================================
-vec4 isectPlane(vec3 ro, vec3 rd, vec3 n) {
-  float t = -dot(ro, n) / dot(rd, n);
-  return t < 0.0 ? vec4(FAR) : vec4(n, t);
-}
-
 vec4 isectBox(vec3 ro, vec3 rd, vec3 s) {
   vec3 xo = -ro / rd;
   vec3 xs = abs(s / rd);
@@ -237,17 +231,6 @@ void main() {
       vec4 isect = vec4(FAR), isect2, isect3;
 
       // -- intersect stuff ------------------------------------------------------------------------
-      // temp light?
-      isect2 = isectSphere(ro - vec3(3, 2.5, -6), rd, 0.5);
-      if (isect2.w < isect.w) {
-        isect = isect2;
-        material = mat3(
-          vec3(0),
-          vec3(9, 0, 0),
-          vec3(1, 1, 0)
-        );
-      }
-
       // exit sign
       const vec3 i_exitSignPos = vec3(0, 2.35, -2);
       isect2 = isectBox(ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
@@ -340,15 +323,22 @@ void main() {
       ro.zx *= rotate2D(-i_prohibitedRot);
 
       // floor
-      isect2 = isectPlane(ro, rd, vec3(0, 1, 0));
+      isect2 = isectBox(ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 13));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_FLOOR);
       }
 
+      // gutter
+      isect2 = isectBox(ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 13));
+      if (isect2.w < isect.w) {
+        isect = isect2;
+        material = mat3(MTL_WALL);
+      }
+
       // wall
-      isect2 = isectBox(ro - vec3(-5, 0, 6), rd, vec3(3.5, 3, 9));
-      isect3 = isectBox(ro - vec3(5, 0, 6), rd, vec3(3.5, 3, 9));
+      isect2 = isectBox(ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 13));
+      isect3 = isectBox(ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 13));
       isect2 = isect2.w < isect3.w ? isect2 : isect3;
       isect3 = isectBox(ro - vec3(0, 0, 20), rd, vec3(10, 10, 0));
       isect2 = isect2.w < isect3.w ? isect2 : isect3;
@@ -358,7 +348,7 @@ void main() {
       }
 
       // no smoking
-      const vec3 i_noSmokingSignPos = vec3(1.5, 1.72, 0);
+      const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, 0);
       ro -= i_noSmokingSignPos;
       isect2 = isectBox(ro, rd, vec3(0.01, 0.25, 0.5));
       if (isect2.w < isect.w) {
@@ -373,25 +363,16 @@ void main() {
       ro += i_noSmokingSignPos;
 
       // wall bar
-      isect2 = isectBox(ro - vec3(1.5, 0, 1.5), rd, vec3(0.01, 3, 0.1));
-      isect3 = isectBox(ro - vec3(-1.5, 0, 1.5), rd, vec3(0.01, 3, 0.1));
+      isect2 = isectBox(ro - vec3(1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
+      isect3 = isectBox(ro - vec3(-1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
       isect2 = isect2.w < isect3.w ? isect2 : isect3;
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL_BAR);
       }
 
-      // wall2
-      isect2 = isectPlane(ro - vec3(0, 0, -9), rd, vec3(0, 0, 1));
-      isect3 = isectPlane(ro - vec3(0, 2.2, -9), rd, vec3(0, -INV_SQRT2, INV_SQRT2));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      if (isect2.w < isect.w) {
-        isect = isect2;
-        material = mat3(MTL_WALL2);
-      }
-
       // ceil
-      isect2 = isectPlane(ro - vec3(0, 2.5, 0), rd, vec3(0, -1, 0));
+      isect2 = isectBox(ro - vec3(0, 2.5, 10), rd, vec3(1.6, 0, 13));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_CEIL);
@@ -485,16 +466,6 @@ void main() {
             ));
           }
         }
-      } else if (material[2].z == MTL_WALL2) {
-        // wall 2
-        material = mat3(
-          vec3(0.9, 0.8, 0.6),
-          vec3(0),
-          vec3(0.3, 0.0, 0.0)
-        );
-
-        vec3 i_noise = cyclicNoise(8.0 * cyclicNoise(4.0 * rp));
-        isect.xyz = normalize(isect.xyz + 0.1 * i_noise);
       } else if (material[2].z == MTL_WALL_BAR) {
         material = mat3(
           vec3(0.5),
@@ -816,7 +787,7 @@ void main() {
         material[2].x = mix(material[2].x, 1.0, n);
 
         // black water
-        float i_n = smoothstep(0.0, 1.0, 0.5 * cyclicNoise(rp).y - rp.y - 0.2 * rp.z);
+        float i_n = smoothstep(0.0, 1.0, cyclicNoise(rp / 2.0).y - rp.y + 0.3);
         if (i_n > seed.x) {
           material[0] = vec3(0);
           material[1] = vec3(0);
