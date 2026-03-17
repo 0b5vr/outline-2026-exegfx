@@ -1,6 +1,8 @@
 #version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
-#define INTERACTIVE_CAMERA
+// #define INTERACTIVE_CAMERA
+// #define DEBUG_NORMAL
+// #define DEBUG_FOCUS
 
 layout(binding = 0) uniform sampler2D backBuffer;
 layout(binding = 1) uniform sampler2D accumBuffer;
@@ -27,7 +29,7 @@ const float MTL_WALL2 = 2.0;
 const float MTL_FLOOR = 3.0;
 const float MTL_CEIL = 4.0;
 const float MTL_CHROME_SPHERE = 5.0;
-const float MTL_TRANSMISSION = 6.0;
+const float MTL_EXIT_SIGN = 6.0;
 const float MTL_PROHIBITED_PLATE = 7.0;
 const float MTL_PROHIBITED_PIPE = 8.0;
 const float MTL_PROHIBITED_FEET = 9.0;
@@ -44,8 +46,6 @@ const float FAR = 100.0;
 const int SAMPLES_PER_FRAME = 10;
 const int PATH_ITER = 5;
 const int MARCH_ITER = 80;
-
-// #define DEBUG_NORMAL
 
 float mgl_frame;
 
@@ -231,6 +231,8 @@ vec4 draw() {
     // -- create ray -------------------------------------------------------------------------------
     vec2 pt = (p * rotate2D(0.01) + seed.xy / resolution.y);
     seed = hash3f(seed);
+
+    const float i_focalDepth = 11.1;
     #ifdef INTERACTIVE_CAMERA
       vec3 ro = cameraInWorld[3].xyz;
       vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
@@ -263,14 +265,15 @@ vec4 draw() {
         );
       }
 
-      // exit light?
-      isect2 = isectBox(ro - vec3(0, 2.35, -2), rd, vec3(0.15, 0.15, 0.05));
+      // exit sign
+      const vec3 i_exitSignPos = vec3(0, 2.35, -2);
+      isect2 = isectBox(ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(
+          vec3(ro + rd * isect.w - i_exitSignPos),
           vec3(0),
-          vec3(1, 4, 1),
-          vec3(1, 1, 0)
+          vec3(MTL_EXIT_SIGN)
         );
       }
 
@@ -325,8 +328,8 @@ vec4 draw() {
       isect3 = isectBox(ro - vec3(0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
       isect2 = isect2.w < isect3.w ? isect2 : isect3;
       if (isect2.w < isect.w) {
+        vec3 rp = ro + rd * isect2.w;
         isect = isect2;
-        vec3 rp = ro + rd * isect.w;
         material = mat3(
           vec3(rp),
           vec3(0),
@@ -340,8 +343,8 @@ vec4 draw() {
       isect3 = isectBox(ro - vec3(0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
       isect2 = isect2.w < isect3.w ? isect2 : isect3;
       if (isect2.w < isect.w) {
+        vec3 rp = ro + rd * isect2.w;
         isect = isect2;
-        vec3 rp = ro + rd * isect.w;
         material = mat3(
           vec3(rp),
           vec3(0),
@@ -376,8 +379,8 @@ vec4 draw() {
       ro -= i_noSmokingSignPos;
       isect2 = isectBox(ro, rd, vec3(0.01, 0.25, 0.5));
       if (isect2.w < isect.w) {
+        vec3 rp = ro + rd * isect2.w;
         isect = isect2;
-        vec3 rp = ro + rd * isect.w;
         material = mat3(
           vec3(rp),
           vec3(0),
@@ -474,12 +477,6 @@ vec4 draw() {
           vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.095, 0.045), 0.003);
           vec3 dice = hash3f(tileCenter.xyy);
           vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp));
-
-          material = mat3(
-            vec3(10.0 * length(tileCenter - rpt.xy)),
-            vec3(0.0),
-            vec3(0.8, 0.0, 0.0)
-          );
 
           material = mat3(
             vec3(0.1 + 0.6 * noise.x),
@@ -660,7 +657,7 @@ vec4 draw() {
             material = mat3(
               vec3(0.8),
               vec3(0),
-              vec3(0.5, 0, 0)
+              vec3(0.4, 0, 0)
             );
           } else {
             // gap
@@ -670,6 +667,55 @@ vec4 draw() {
               vec3(0.8, 0, 0)
             );
           }
+        }
+      } else if (material[2].z == MTL_EXIT_SIGN) {
+        vec2 p = 170.0 * material[0].xy;
+        if (abs(p.x) < 23.0 && abs(p.y) < 23.0) {
+          // sign
+          float d = 8.0;
+
+          // arms
+          minSdArcPath(p, d, -14, 3, -9, 3, 0);
+          minSdArcPath(p, d, -9, 3, -4, 9, 0);
+          minSdArcPath(p, d, -4, 9, 6, 9, 0);
+          minSdArcPath(p, d, 6, 9, 10, 4, 0);
+
+          // left leg
+          minSdArcPath(p, d, -1, 9, 4, 0, 0);
+          minSdArcPath(p, d, 4, 0, 5, -9, 0);
+          minSdArcPath(p, d, 5, -9, 14, -9, 0);
+
+          // right leg
+          minSdArcPath(p, d, -4, 8, 1, -1, 0);
+          minSdArcPath(p, d, 1, -1, -6, -14, 0);
+          minSdArcPath(p, d, -5, -18, 2, -24, 0);
+
+          // stroke width / head
+          d = min(d - 1.6, length(p - vec2(-4.3, 14.4)) - 3.4);
+
+          // door
+          d = min(d, min(
+            max(
+              12.0 - abs(p.x + min(0.0, p.y + 16.0)),
+              sign(p.x) - d
+            ),
+            20.0 - p.y
+          ));
+
+          bool i_shape = d < 0.0;
+
+          material = mat3(
+            vec3(1),
+            i_shape ? vec3(0, 2, 1) : vec3(2),
+            vec3(0.2, 1, 0)
+          );
+        } else {
+          // frame
+          material = mat3(
+            vec3(0.9),
+            vec3(0),
+            vec3(0.4, 0, 0)
+          );
         }
       } else if (material[2].z == MTL_PROHIBITED_PLATE) {
         vec2 pt = material[0].xy / vec2(0.012, 0.016);
@@ -792,14 +838,20 @@ vec4 draw() {
       float i_roughness = material[2].x;
       float i_metallic = material[2].y;
 
-      // -- update ray and throughput --------------------------------------------------------------
-      ro = rp + isect.xyz * 0.001;
-      float sqRoughness = i_roughness * i_roughness;
-      float sqSqRoughness = sqRoughness * sqRoughness;
+      // -- debug stuff ----------------------------------------------------------------------------
+      #ifdef DEBUG_FOCUS
+        float v = exp(-10.0 * abs(isect.w - length(i_focalDepth)) / isect.w);
+        return v > 0.99 ? vec4(1, 0, 0, 1) : vec4(vec3(max(0.0, v)), 1);
+      #endif
 
       #ifdef DEBUG_NORMAL
         return vec4(0.5 + 0.5 * isect.xyz, 1.0);
       #endif
+
+      // -- update ray and throughput --------------------------------------------------------------
+      ro = rp + isect.xyz * 0.001;
+      float sqRoughness = i_roughness * i_roughness;
+      float sqSqRoughness = sqRoughness * sqRoughness;
 
       seed = hash3f(seed);
 
@@ -868,12 +920,6 @@ vec4 draw() {
 
           // brdf
           beta *= (1.0 - i_Fh) / (1.0 - Fn) * i_baseColor;
-
-          // cringe transmission
-          if (material[2].z == MTL_TRANSMISSION) {
-            ro -= 0.002 * isect.xyz;
-            continue;
-          }
         }
 
         // prepare the rd for the next ray
