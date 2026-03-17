@@ -459,7 +459,7 @@ const char *draw_frag =
                "B.xyz=normalize(B.xyz+.04*p(80.*F));"
              "}"
            "else if(k[2].z==9.)"
-             "k=mat3(vec3(.3),vec3(0),vec3(.7,1,0));"
+             "k=mat3(vec3(.3),vec3(0),vec3(.7,1,20));"
            "d=f(d);"
            "if(k[2].z!=5.)"
              "{"

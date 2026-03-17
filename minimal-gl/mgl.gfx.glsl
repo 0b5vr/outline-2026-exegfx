@@ -756,7 +756,7 @@ vec4 draw() {
         material = mat3(
           vec3(0.3),
           vec3(0),
-          vec3(0.7, 1.0, 0.0)
+          vec3(0.7, 1.0, MTLMOD_SCRATCH)
         );
       }
 
