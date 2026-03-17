@@ -471,10 +471,7 @@ vec4 draw() {
             (floor(rpt.x / 0.2 + mod(tileY, 2.0) * 0.5) - mod(tileY, 2.0) * 0.5) * 0.2 + 0.1,
             tileY * 0.1 + 0.05
           );
-          vec3 sdgTile = (
-            sdgbox2(rpt.xy - tileCenter, vec2(0.095, 0.045), 0.003)
-            + 0.002 * max(cyclicNoise(20.0 * rpt).x, 0.0)
-          );
+          vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.095, 0.045), 0.003);
           vec3 dice = hash3f(tileCenter.xyy);
           vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp));
 
