@@ -1,6 +1,6 @@
 #version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
-// #define INTERACTIVE_CAMERA
+#define INTERACTIVE_CAMERA
 
 layout(binding = 0) uniform sampler2D backBuffer;
 layout(binding = 1) uniform sampler2D accumBuffer;
@@ -128,7 +128,10 @@ vec3 sdgbox2(vec2 p, vec2 s, float r) {
   }
 }
 
-float sdArcPath(vec2 p, vec2 tail, float t) {
+void minSdArcPath(vec2 p, inout float d, float x0, float y0, float x1, float y1, float t) {
+  p -= vec2(x0, y0);
+  vec2 tail = vec2(x1 - x0, y1 - y0);
+
   t = t == 0.0 ? 0.001 : t;
   vec2 cs = cis(abs(t) / 2.0);
   float l = length(tail);
@@ -137,9 +140,11 @@ float sdArcPath(vec2 p, vec2 tail, float t) {
   p.x *= sign(t);
   p -= r * cs * vec2(-1.0, 1.0);
   p.y = abs(p.y);
-  return (cs.y * p.x > cs.x * p.y)
+  float dArc = (cs.y * p.x > cs.x * p.y)
     ? abs(length(p) - r)
     : length(p - cs * r);
+
+  d = min(d, dArc);
 }
 
 // == isects =======================================================================================
@@ -546,16 +551,16 @@ vec4 draw() {
           float d = 1.0;
 
           // outside smoke
-          d = min(d, sdArcPath(pt - vec2(6, 0), vec2(-2, 2), 1.6));
-          d = min(d, sdArcPath(pt - vec2(4, 2), vec2(-1, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(3, 2), vec2(-1, 4), 1.6));
+          minSdArcPath(pt, d, 6, 0, 4, 2, 1.6);
+          minSdArcPath(pt, d, 4, 2, 3, 2, 0);
+          minSdArcPath(pt, d, 3, 2, 2, 6, 1.6);
 
           // inside smoke
-          d = min(d, sdArcPath(pt - vec2(5, 0), vec2(-1, 1), 1.6));
-          d = min(d, sdArcPath(pt - vec2(4, 1), vec2(-2, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(2, 1), vec2(-1, 1), -1.6));
-          d = min(d, sdArcPath(pt - vec2(1, 2), vec2(0, 1), 0.0));
-          d = min(d, sdArcPath(pt - vec2(1, 3), vec2(-2, 3), -2.0));
+          minSdArcPath(pt, d, 5, 0, 4, 1, 1.6);
+          minSdArcPath(pt, d, 4, 1, 2, 1, 0);
+          minSdArcPath(pt, d, 2, 1, 1, 2, -1.6);
+          minSdArcPath(pt, d, 1, 2, 1, 3, 0);
+          minSdArcPath(pt, d, 1, 3, -1, 6, -2.0);
 
           bool i_shapeRed = length(pt) < 10.0 && (length(pt) > 8.0 || abs(pt.x + pt.y) < 1.5);
           bool i_shapeBlack = d < 0.3 && pt.y > 0.0 || abs(pt.x) < 6.3 && abs(pt.y + 1.3) < 1.0 && abs(pt.x - 5.5) > 0.2 && abs(pt.x - 4.5) > 0.2;
@@ -567,39 +572,39 @@ vec4 draw() {
           float d = 1.0;
 
           // 禁
-          d = min(d, sdArcPath(pt - vec2(-7, 6), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 7), vec2(0, -5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 6), vec2(-3, -3.5), -0.2));
-          d = min(d, sdArcPath(pt - vec2(-4, 6), vec2(3, -3.5), 0.2));
-          d = min(d, sdArcPath(pt - vec2(1, 6), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(4, 7), vec2(0, -5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(4, 6), vec2(-3, -3.5), -0.2));
-          d = min(d, sdArcPath(pt - vec2(4, 6), vec2(3, -3.5), 0.2));
-          d = min(d, sdArcPath(pt - vec2(-6, 0), vec2(12, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-7, -2.5), vec2(14, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, -2.5), vec2(0, -4.5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, -7), vec2(-2, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-3, -4.5), vec2(-3.5, -2.5), -0.5));
-          d = min(d, sdArcPath(pt - vec2(3, -4.5), vec2(3.5, -2.5), 0.3));
+          minSdArcPath(pt, d, -7, 6, -1, 6, 0);
+          minSdArcPath(pt, d, -4, 7, -4, 2, 0);
+          minSdArcPath(pt, d, -4, 6, -7, 2.5, -0.2);
+          minSdArcPath(pt, d, -4, 6, -1, 2.5, 0.2);
+          minSdArcPath(pt, d, 1, 6, 7, 6, 0);
+          minSdArcPath(pt, d, 4, 7, 4, 2, 0);
+          minSdArcPath(pt, d, 4, 6, 1, 2.5, -0.2);
+          minSdArcPath(pt, d, 4, 6, 7, 2.5, 0.2);
+          minSdArcPath(pt, d, -6, 0, 6, 0, 0);
+          minSdArcPath(pt, d, -7, -2.5, 7, -2.5, 0);
+          minSdArcPath(pt, d, 0, -2.5, 0, -7, 0);
+          minSdArcPath(pt, d, 0, -7, -2, -7, 0);
+          minSdArcPath(pt, d, -3, -4.5, -6.5, -7, -0.5);
+          minSdArcPath(pt, d, 3, -4.5, 6.5, -7, 0.3);
 
           // 煙
           pt.x -= 20.0;
-          d = min(d, sdArcPath(pt - vec2(-7, 4), vec2(0, -4), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-3, 3), vec2(-1, -2), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-5, 7), vec2(0, -8), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-5, -1), vec2(-2, -6), -0.5));
-          d = min(d, sdArcPath(pt - vec2(-5, -1), vec2(2, -3), 0.0));
+          minSdArcPath(pt, d, -7, 4, -7, 0, 0);
+          minSdArcPath(pt, d, -3, 3, -4, 1, 0);
+          minSdArcPath(pt, d, -5, 7, -5, -1, 0);
+          minSdArcPath(pt, d, -5, -1, -7, -7, -0.5);
+          minSdArcPath(pt, d, -5, -1, -3, -4, 0);
 
-          d = min(d, sdArcPath(pt - vec2(-1, 7), vec2(8, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-1, 3.5), vec2(0, -4.5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-1, 3.5), vec2(8, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(7, 3.5), vec2(0, -4.5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(1.7, 7), vec2(0, -8), 0.0));
-          d = min(d, sdArcPath(pt - vec2(4.3, 7), vec2(0, -8), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-1), vec2(8, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, -4), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(3, -1), vec2(0, -6), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-1, -7), vec2(8, 0), 0.0));
+          minSdArcPath(pt, d, -1, 7, 7, 7, 0);
+          minSdArcPath(pt, d, -1, 3.5, -1, -1, 0);
+          minSdArcPath(pt, d, -1, 3.5, 7, 3.5, 0);
+          minSdArcPath(pt, d, 7, 3.5, 7, -1, 0);
+          minSdArcPath(pt, d, 1.7, 7, 1.7, -1, 0);
+          minSdArcPath(pt, d, 4.3, 7, 4.3, -1, 0);
+          minSdArcPath(pt, d, -1, -1, 7, -1, 0);
+          minSdArcPath(pt, d, 0, -4, 6, -4, 0);
+          minSdArcPath(pt, d, 3, -1, 3, -7, 0);
+          minSdArcPath(pt, d, -1, -7, 7, -7, 0);
 
           material[0] = d < 0.8 ? vec3(1, 0.2, 0.3) : vec3(1);
         }
@@ -706,41 +711,41 @@ vec4 draw() {
 
           // 立
           pt.x += 27.0;
-          d = min(d, sdArcPath(pt - vec2(0, 7), vec2(0, -2), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-6, 5), vec2(12, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 3), vec2(2, -8), -0.1));
-          d = min(d, sdArcPath(pt - vec2(4, 3), vec2(-3, -10), -0.3));
-          d = min(d, sdArcPath(pt - vec2(-7, -7), vec2(14, 0), 0.0));
+          minSdArcPath(pt, d, 0, 7, 0, 5, 0);
+          minSdArcPath(pt, d, -6, 5, 6, 5, 0);
+          minSdArcPath(pt, d, -4, 3, -2, -5, -0.1);
+          minSdArcPath(pt, d, 4, 3, 1, -7, -0.3);
+          minSdArcPath(pt, d, -7, -7, 7, -7, 0);
 
           // 入
           pt.x -= 18.0;
-          d = min(d, sdArcPath(pt - vec2(-3, 7), vec2(3, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, 7), vec2(-7, -14), -1.0));
-          d = min(d, sdArcPath(pt - vec2(0, 7), vec2(7, -14), 1.0));
+          minSdArcPath(pt, d, -3, 7, 0, 7, 0);
+          minSdArcPath(pt, d, 0, 7, -7, -7, -1.0);
+          minSdArcPath(pt, d, 0, 7, 7, -7, 1.0);
 
           // 禁
           pt.x -= 18.0;
-          d = min(d, sdArcPath(pt - vec2(-7, 6), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 7), vec2(0, -5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 6), vec2(-3, -3.5), -0.2));
-          d = min(d, sdArcPath(pt - vec2(-4, 6), vec2(3, -3.5), 0.2));
-          d = min(d, sdArcPath(pt - vec2(1, 6), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(4, 7), vec2(0, -5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(4, 6), vec2(-3, -3.5), -0.2));
-          d = min(d, sdArcPath(pt - vec2(4, 6), vec2(3, -3.5), 0.2));
-          d = min(d, sdArcPath(pt - vec2(-6, 0), vec2(12, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-7, -2.5), vec2(14, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, -2.5), vec2(0, -4.5), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, -7), vec2(-2, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-3, -4.5), vec2(-3.5, -2.5), -0.5));
-          d = min(d, sdArcPath(pt - vec2(3, -4.5), vec2(3.5, -2.5), 0.3));
+          minSdArcPath(pt, d, -7, 6, -1, 6, 0);
+          minSdArcPath(pt, d, -4, 7, -4, 2, 0);
+          minSdArcPath(pt, d, -4, 6, -7, 2.5, -0.2);
+          minSdArcPath(pt, d, -4, 6, -1, 2.5, 0.2);
+          minSdArcPath(pt, d, 1, 6, 7, 6, 0);
+          minSdArcPath(pt, d, 4, 7, 4, 2, 0);
+          minSdArcPath(pt, d, 4, 6, 1, 2.5, -0.2);
+          minSdArcPath(pt, d, 4, 6, 7, 2.5, 0.2);
+          minSdArcPath(pt, d, -6, 0, 6, 0, 0);
+          minSdArcPath(pt, d, -7, -2.5, 7, -2.5, 0);
+          minSdArcPath(pt, d, 0, -2.5, 0, -7, 0);
+          minSdArcPath(pt, d, 0, -7, -2, -7, 0);
+          minSdArcPath(pt, d, -3, -4.5, -6.5, -7, -0.5);
+          minSdArcPath(pt, d, 3, -4.5, 6.5, -7, 0.3);
 
           // 止
           pt.x -= 18.0;
-          d = min(d, sdArcPath(pt - vec2(0, 7), vec2(0, -14), 0.0));
-          d = min(d, sdArcPath(pt - vec2(0, 2), vec2(6, 0), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-4, 3), vec2(0, -10), 0.0));
-          d = min(d, sdArcPath(pt - vec2(-7, -7), vec2(14, 0), 0.0));
+          minSdArcPath(pt, d, 0, 7, 0, -7, 0);
+          minSdArcPath(pt, d, 0, 2, 6, 2, 0);
+          minSdArcPath(pt, d, -4, 3, -4, -7, 0);
+          minSdArcPath(pt, d, -7, -7, 7, -7, 0);
 
           material[0] = d < 1.0
             ? vec3(0.7, 0, 0)
