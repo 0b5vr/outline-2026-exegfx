@@ -816,8 +816,8 @@ vec4 draw() {
       }
 
       if (material[2].z == MTLMOD_SCRATCH) {
-        vec3 i_nDisplace = 20.0 * cyclicNoise(1.0 * rp.xyz);
-        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 8.0);
+        vec3 i_nDisplace = 20.0 * cyclicNoise(rp.xyz / 2);
+        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 12.0);
         if (i_n > seed.x) {
           material = mat3(
             vec3(0.1, 0.06, 0.04),
