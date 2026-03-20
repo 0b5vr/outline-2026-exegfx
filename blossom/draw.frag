@@ -459,10 +459,10 @@ void main() {
               vec3(0.2 + 0.3 * noise.y, 0.0, 0.0)
             );
 
-            vec2 i_gap2 = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
+            vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
             isect.xyz = normalize(basis * vec3(
-              i_gap2 + 0.03 * (dice.xy - 0.5),
-              1
+              i_nEdge + 0.03 * (dice.xy - 0.5),
+              2
             ));
           }
         }
@@ -546,44 +546,72 @@ void main() {
       } else if (material[2].z == MTL_FLOOR) {
         vec2 p = rpt.xy;
 
-        vec2 tileCenter = floor(p / 0.5) * 0.5 + 0.25;
-        vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.235), 0.01);
-        vec3 dice = hash3f(tileCenter.yxx);
+        // gap
+        material = mat3(
+          vec3(0.1 + 0.1 * sin(3.0 * cyclicNoise(2.0 * p.xxy).x)),
+          vec3(0.0),
+          vec3(0.8, 0.0, 0.0)
+        );
 
-        if (sdgTile.z > 0.0) {
-          // gap
-          material = mat3(
-            vec3(0.1 + 0.1 * sin(3.0 * cyclicNoise(2.0 * p.xxy).x)),
-            vec3(0.0),
-            vec3(0.8, 0.0, 0.0)
-          );
+        vec2 tileCenter = floor(p / 0.3) * 0.3 + 0.15;
+        if (tileCenter.x == 0.15) {
+          // tactile
+          vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.135), 0.01);
+
+          if (sdgTile.z < 0.0) {
+            material = mat3(
+              vec3(0.8, 0.5, 0.1),
+              vec3(0.0),
+              vec3(0.4, 0.0, MTLMOD_SCRATCH)
+            );
+
+            p -= tileCenter;
+            p.x -= (floor(p.x / 0.07) + 0.5) * 0.07;
+            vec3 sdgTactile = sdgbox2(
+              p,
+              vec2(0.0, 0.11),
+              0.015
+            );
+            vec2 i_nEdge = step(abs(sdgTile.z), 0.004) * sdgTile.xy;
+            vec2 i_nEdgeTactile = step(abs(sdgTactile.z), 0.002) * sdgTactile.xy;
+            isect.xyz = normalize(basis * vec3(
+              i_nEdge + i_nEdgeTactile + 0.03 * hash3f(tileCenter.xyy).xy,
+              2
+            ));
+          }
         } else {
-          // tile
-          material = mat3(
-            vec3(tileCenter.x == -0.25 ? 0.2 : 0.4),
-            vec3(0.0),
-            vec3(0.4, 0.0, 0.0)
-          );
-        }
+          // tiles
+          tileCenter = floor(p / 0.5) * 0.5 + 0.25;
+          vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.235), 0.01);
 
-        vec2 i_gap2 = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
-        isect.xyz = normalize(basis * vec3(
-          i_gap2 + 0.03 * dice.xy,
-          1
-        ));
+          if (sdgTile.z < 0.0) {
+            // tile
+            material = mat3(
+              vec3(tileCenter.x == -0.25 ? 0.2 : 0.4),
+              vec3(0.0),
+              vec3(0.4, 0.0, 0.0)
+            );
 
-        // direction sign
-        bool side = p.x < 0.0;
-        p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.78) * sign(p.x));
-        vec3 sdgDir = sdgbox2(p, vec2(0.15), 0.05);
-        if (sdgDir.z < 0.0) {
-          bool i_shape = (sdgDir.z > -0.01 || abs(p.x) < 0.16 && abs(p.x - p.y - 0.08) < 0.05) ^^ side;
+            vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
+            isect.xyz = normalize(basis * vec3(
+              i_nEdge + 0.03 * hash3f(tileCenter.xyy).xy,
+              2
+            ));
+          }
 
-          material = mat3(
-            i_shape ? vec3(0.1, 0.1, 0.3) : vec3(0.9),
-            vec3(0.0),
-            vec3(0.5, 0.0, MTLMOD_SCRATCH)
-          );
+          // direction sign
+          bool side = p.x < 0.0;
+          p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.78) * sign(p.x));
+          vec3 sdgDir = sdgbox2(p, vec2(0.15), 0.05);
+          if (sdgDir.z < 0.0) {
+            bool i_shape = (sdgDir.z > -0.01 || abs(p.x) < 0.16 && abs(p.x - p.y - 0.08) < 0.05) ^^ side;
+
+            material = mat3(
+              i_shape ? vec3(0.1, 0.1, 0.3) : vec3(0.9),
+              vec3(0.0),
+              vec3(0.5, 0.0, MTLMOD_SCRATCH)
+            );
+          }
         }
       } else if (material[2].z == MTL_CEIL) {
         vec2 p = rp.xz;
