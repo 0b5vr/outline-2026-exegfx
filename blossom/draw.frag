@@ -186,10 +186,14 @@ float smin(float a, float b, float k) {
 }
 
 float mapChrome(vec3 p) {
-  return 0.9 * smin(
-    length(p + 0.1 * cyclicNoise(p + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.8,
-    p.y,
-    2.0
+  return 0.8 * smin(
+    smin(
+      length(p + 0.4 * cyclicNoise(p / 2 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.7,
+      2.5 - p.y,
+      2.0
+    ),
+    max(p.y, abs(p.x) - 1.5),
+    1.5
   );
 }
 
@@ -314,7 +318,7 @@ void main() {
 
       // floor
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 13));
+      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 100));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_FLOOR);
@@ -322,7 +326,7 @@ void main() {
 
       // gutter
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 13));
+      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 100));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL);
@@ -330,8 +334,8 @@ void main() {
 
       // wall
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 13));
-      isectBox(isect2, ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 13));
+      isectBox(isect2, ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 100));
+      isectBox(isect2, ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 100));
       isectBox(isect2, ro - vec3(0, 0, 20), rd, vec3(10, 10, 0));
       if (isect2.w < isect.w) {
         isect = isect2;
@@ -365,24 +369,24 @@ void main() {
 
       // ceil
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, 2.5, 10), rd, vec3(1.6, 0, 13));
+      isectBox(isect2, ro - vec3(0, 2.5, 10), rd, vec3(100, 0, 100));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_CEIL);
       }
 
       // chrome sphere
-      float i_chromeSpherePosZ = -7.0;
+      float i_chromeSpherePosZ = -4.0;
       ro.z -= i_chromeSpherePosZ;
       isect2 = vec4(FAR);
-      isectSphere(isect2, ro, rd, 2.5);
+      isectBox(isect2, ro, rd, vec3(2.5));
       if (isect2.w < isect.w) {
         vec3 rp = ro;
         float rl = 0.0;
         float dist;
 
         for (int i = 0; i ++ < MARCH_ITER;) {
-          dist = mapChrome(rp);
+          dist = mapChrome(rp) + 0.001 * seed.x;
           rl += dist;
           rp += dist * rd;
           if (abs(dist) < 0.0001 || rl > isect.w) {
