@@ -1,6 +1,7 @@
 #version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
 #define INTERACTIVE_CAMERA
+#define DEBUG_GRID
 // #define DEBUG_NORMAL
 // #define DEBUG_FOCUS
 
@@ -932,6 +933,12 @@ vec4 draw() {
   }
 
   fragColor.w = float(SAMPLES_PER_FRAME);
+
+  #ifdef DEBUG_GRID
+    vec2 grid = step(abs(fract(4.0 * p - 0.5) - 0.5) * resolution.y, vec2(4.0));
+    fragColor = mix(fragColor, vec4(1.0), 0.5 * max(grid.x, grid.y));
+  #endif
+
   return fragColor;
 }
 
