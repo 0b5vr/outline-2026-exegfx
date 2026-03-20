@@ -114,7 +114,7 @@ void minSdArcPath(vec2 p, inout float d, float x0, float y0, float x1, float y1,
 }
 
 // == isects =======================================================================================
-vec4 isectBox(vec3 ro, vec3 rd, vec3 s) {
+void isectBox(inout vec4 isect, vec3 ro, vec3 rd, vec3 s) {
   vec3 xo = -ro / rd;
   vec3 xs = abs(s / rd);
 
@@ -123,41 +123,37 @@ vec4 isectBox(vec3 ro, vec3 rd, vec3 s) {
 
   float df = max(max(dfv.x, dfv.y), dfv.z);
   float db = min(min(dbv.x, dbv.y), dbv.z);
-  if (db < df) { return vec4(FAR); }
+  if (db >= df) {
+    if (df > 0.0 && df < isect.w) {
+      isect = vec4(-sign(rd) * step(vec3(df), dfv), df);
+    }
 
-  if (df > 0.0) {
-    return vec4(-sign(rd) * step(vec3(df), dfv), df);
+    if (db > 0.0 && db < isect.w) {
+      isect = vec4(-sign(rd) * step(dbv, vec3(db)), db);
+    }
   }
-
-  if (db > 0.0) {
-    return vec4(-sign(rd) * step(dbv, vec3(db)), db);
-  }
-
-  return vec4(FAR);
 }
 
-vec4 isectSphere(vec3 ro, vec3 rd, float r) {
+void isectSphere(inout vec4 isect, vec3 ro, vec3 rd, float r) {
   float b = dot(ro, rd);
   float c = dot(ro, ro) - r * r;
   float h = b * b - c;
 
-  if (h < 0.0) { return vec4(FAR); }
+  if (h > 0.0) {
+    h = sqrt(h);
+    float t = -b - h;
+    if (t > 0.0 && t < isect.w) {
+      isect = vec4(normalize(ro + rd * t), t);
+    }
 
-  h = sqrt(h);
-  float t = -b - h;
-  if (t > 0.0) {
-    return vec4(normalize(ro + rd * t), t);
+    t = -b + h;
+    if (t > 0.0 && t < isect.w) {
+      isect = vec4(-normalize(ro + rd * t), t);
+    }
   }
-
-  t = -b + h;
-  if (t > 0.0) {
-    return vec4(-normalize(ro + rd * t), t);
-  }
-
-  return vec4(FAR);
 }
 
-vec4 isectCapsule(vec3 ro, vec3 rd, vec3 tail, float r) {
+void isectCapsule(inout vec4 isect, vec3 ro, vec3 rd, vec3 tail, float r) {
   float tt = dot(tail, tail);
   float td = dot(tail, rd);
   float ot = dot(ro, tail);
@@ -169,17 +165,18 @@ vec4 isectCapsule(vec3 ro, vec3 rd, vec3 tail, float r) {
   float c = tt * oo - ot * ot - r * r * tt;
   float h = b * b - a * c;
 
-  if (h < 0.0) { return vec4(FAR); }
+  if (h > 0.0) {
+    float t = (-b - sqrt(h)) / a;
+    if (t > 0.0) {
+      float y = clamp(ot + t * td, 0.0, tt);
+      if (y > 0.0 && y < tt && t < isect.w) {
+        // you might delete this if the precision doesn't matter
+        isect = vec4((ro + rd * t - y / tt * tail) / r, t);
+      }
 
-  float t = (-b - sqrt(h)) / a;
-  if (t < 0.0) { return vec4(FAR); }
-
-  float y = clamp(ot + t * td, 0.0, tt);
-  if (y > 0.0 && y < tt) {
-    // you might delete this if the precision doesn't matter
-    return vec4((ro + rd * t - y / tt * tail) / r, t);
+      isectSphere(isect, ro - clamp(y, 0.0, tt) / tt * tail, rd, r);
+    }
   }
-  return isectSphere(ro - clamp(y, 0.0, tt) / tt * tail, rd, r);
 }
 
 // == marcher ======================================================================================
@@ -228,12 +225,13 @@ void main() {
     for (int i = 0; i ++ < PATH_ITER;) {
       mat3 material;
 
-      vec4 isect = vec4(FAR), isect2, isect3;
+      vec4 isect = vec4(FAR), isect2 = vec4(FAR);
 
       // -- intersect stuff ------------------------------------------------------------------------
       // exit sign
       const vec3 i_exitSignPos = vec3(0, 2.35, -2);
-      isect2 = isectBox(ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(
@@ -251,7 +249,8 @@ void main() {
       const vec3 i_signPos = vec3(0.0, 0.4, 0.0);
       ro -= i_signPos;
 
-      isect2 = isectBox(ro, rd, vec3(0.45, 0.3, 0.0));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro, rd, vec3(0.45, 0.3, 0.0));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         float dProhibitedPlate = max(
@@ -272,27 +271,18 @@ void main() {
       ro += i_signPos;
 
       // prohibited sign pipe
-      isect2 = isectCapsule(ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
-      isect3 = isectCapsule(ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectCapsule(ro - vec3(-0.6, 0.75, 0.0), rd, vec3(1.2, 0, 0), 0.02);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectCapsule(ro - vec3(-0.6, 0.1, 0.19), rd, vec3(1.2, 0, 0), 0.01);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectCapsule(ro - vec3(-0.6, 0.1, -0.19), rd, vec3(1.2, 0, 0), 0.01);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectCapsule(ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectCapsule(ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectBox(ro - vec3(-0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectBox(ro - vec3(0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectBox(ro - vec3(-0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectBox(ro - vec3(0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
+      isect2 = vec4(FAR);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(1.2, 0, 0), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.1, 0.19), rd, vec3(1.2, 0, 0), 0.01);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.1, -0.19), rd, vec3(1.2, 0, 0), 0.01);
+      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
+      isectBox(isect2, ro - vec3(-0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
+      isectBox(isect2, ro - vec3(0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
+      isectBox(isect2, ro - vec3(-0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
+      isectBox(isect2, ro - vec3(0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         isect = isect2;
@@ -305,9 +295,9 @@ void main() {
       }
 
       // prohibited sign feet
-      isect2 = isectBox(ro - vec3(-0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
-      isect3 = isectBox(ro - vec3(0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(-0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
+      isectBox(isect2, ro - vec3(0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         isect = isect2;
@@ -323,25 +313,26 @@ void main() {
       ro.zx *= rotate2D(-i_prohibitedRot);
 
       // floor
-      isect2 = isectBox(ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 13));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 13));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_FLOOR);
       }
 
       // gutter
-      isect2 = isectBox(ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 13));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 13));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL);
       }
 
       // wall
-      isect2 = isectBox(ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 13));
-      isect3 = isectBox(ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 13));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
-      isect3 = isectBox(ro - vec3(0, 0, 20), rd, vec3(10, 10, 0));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 13));
+      isectBox(isect2, ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 13));
+      isectBox(isect2, ro - vec3(0, 0, 20), rd, vec3(10, 10, 0));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL);
@@ -350,7 +341,8 @@ void main() {
       // no smoking
       const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, 0);
       ro -= i_noSmokingSignPos;
-      isect2 = isectBox(ro, rd, vec3(0.01, 0.25, 0.5));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro, rd, vec3(0.01, 0.25, 0.5));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         isect = isect2;
@@ -363,16 +355,17 @@ void main() {
       ro += i_noSmokingSignPos;
 
       // wall bar
-      isect2 = isectBox(ro - vec3(1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
-      isect3 = isectBox(ro - vec3(-1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
-      isect2 = isect2.w < isect3.w ? isect2 : isect3;
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
+      isectBox(isect2, ro - vec3(-1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL_BAR);
       }
 
       // ceil
-      isect2 = isectBox(ro - vec3(0, 2.5, 10), rd, vec3(1.6, 0, 13));
+      isect2 = vec4(FAR);
+      isectBox(isect2, ro - vec3(0, 2.5, 10), rd, vec3(1.6, 0, 13));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_CEIL);
@@ -381,7 +374,8 @@ void main() {
       // chrome sphere
       float i_chromeSpherePosZ = -7.0;
       ro.z -= i_chromeSpherePosZ;
-      isect2 = isectSphere(ro, rd, 2.5);
+      isect2 = vec4(FAR);
+      isectSphere(isect2, ro, rd, 2.5);
       if (isect2.w < isect.w) {
         vec3 rp = ro;
         float rl = 0.0;
