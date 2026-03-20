@@ -438,7 +438,7 @@ void main() {
             (floor(rpt.x / 0.2 + mod(tileY, 2.0) * 0.5) - mod(tileY, 2.0) * 0.5) * 0.2 + 0.1,
             tileY * 0.1 + 0.05
           );
-          vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.095, 0.045), 0.003);
+          vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.093, 0.043), 0.003);
           vec3 dice = hash3f(tileCenter.xyy);
           vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp));
 
@@ -453,7 +453,7 @@ void main() {
               mix(
                 pow(vec3(0.9, 0.7, 0.5), vec3(exp2(0.5 * dice.z))),
                 vec3(0.6 * noise.x),
-                0.1 * noise.y
+                0.2 * noise.y
               ),
               vec3(0.0),
               vec3(0.2 + 0.3 * noise.y, 0.0, 0.0)
