@@ -55,8 +55,8 @@ float i_safeDot(vec3 a, vec3 b) {
 
 mat3 orthBas(vec3 z) {
   z = normalize(z);
-  vec3 up = abs(z.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
-  vec3 x = normalize(cross(up, z));
+  vec3 i_up = abs(z.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
+  vec3 x = normalize(cross(i_up, z));
   return mat3(x, cross(z, x), z);
 }
 
@@ -75,65 +75,65 @@ vec3 cyclicNoise(vec3 p) {
 
 // == sdfs =========================================================================================
 // Ref: https://iquilezles.org/articles/distgradfunctions3d/
-vec3 sdgbox2(vec2 p, vec2 s, float r) {
-  vec2 d = abs(p) - s;
-  float g = max(d.x, d.y);
+vec3 sdgbox2(vec2 p, vec2 sizeOrD, float r) {
+  sizeOrD = abs(p) - sizeOrD;
+  float g = max(sizeOrD.x, sizeOrD.y);
 
   if (g > 0.0) {
     // outside
-    vec2 q = max(d, 0.0);
+    vec2 q = max(sizeOrD, 0.0);
     float l = length(q);
     return vec3(sign(p) * q / l, l - r);
   } else {
     // inside
-    return vec3(sign(p) * step(vec2(g), d), g - r);
+    return vec3(sign(p) * step(vec2(g), sizeOrD), g - r);
   }
 }
 
-void minSdArcPath(vec2 p, inout float d, float x0, float y0, float x1, float y1, float t) {
-  p -= vec2(x0, y0);
-  vec2 tail = vec2(x1 - x0, y1 - y0);
-
+void minSdArcPath(vec2 p, inout float d, float x0OrL, float y0OrR, float x1, float y1, float t) {
   t = t == 0.0 ? 0.001 : t;
-  vec2 cs = cis(abs(t) / 2.0);
-  float l = length(tail);
-  float r = l / 2.0 / cs.y;
-  p *= mat2(tail.y, -tail.x, tail.x, tail.y) / l;
-  p.x *= sign(t);
-  p -= r * cs * vec2(-1.0, 1.0);
-  p.y = abs(p.y);
-  float dArc = (cs.y * p.x > cs.x * p.y)
-    ? abs(length(p) - r)
-    : length(p - cs * r);
+  p -= vec2(x0OrL, y0OrR);
+  vec2 tail = vec2(x1 - x0OrL, y1 - y0OrR);
 
-  d = min(d, dArc);
+  vec2 cs = cis(abs(t) / 2.0);
+  x0OrL = length(tail);
+  y0OrR = x0OrL / 2.0 / cs.y;
+  p *= mat2(tail.y, -tail.x, tail.x, tail.y) / x0OrL;
+  p.x *= sign(t);
+  p -= y0OrR * cs * vec2(-1.0, 1.0);
+  p.y = abs(p.y);
+  float i_dArc = (cs.y * p.x > cs.x * p.y)
+    ? abs(length(p) - y0OrR)
+    : length(p - cs * y0OrR);
+
+  d = min(d, i_dArc);
 }
 
 // == isects =======================================================================================
-void isectBox(inout vec4 isect, vec3 ro, vec3 rd, vec3 s) {
-  vec3 xo = -ro / rd;
-  vec3 xs = abs(s / rd);
+void isectBox(inout vec4 isect, vec3 roOrXoOrDfv, vec3 rd, vec3 sOrXsOrDbv) {
+  roOrXoOrDfv = -roOrXoOrDfv / rd;
+  sOrXsOrDbv = abs(sOrXsOrDbv / rd);
 
-  vec3 dfv = xo - xs;
-  vec3 dbv = xo + xs;
+  roOrXoOrDfv = roOrXoOrDfv - sOrXsOrDbv;
+  sOrXsOrDbv = roOrXoOrDfv + sOrXsOrDbv + sOrXsOrDbv;
 
-  float df = max(max(dfv.x, dfv.y), dfv.z);
-  float db = min(min(dbv.x, dbv.y), dbv.z);
+  float df = max(max(roOrXoOrDfv.x, roOrXoOrDfv.y), roOrXoOrDfv.z);
+  float db = min(min(sOrXsOrDbv.x, sOrXsOrDbv.y), sOrXsOrDbv.z);
   if (db >= df) {
     if (df > 0.0 && df < isect.w) {
-      isect = vec4(-sign(rd) * step(vec3(df), dfv), df);
+      isect = vec4(-sign(rd) * step(vec3(df), roOrXoOrDfv), df);
     }
 
     if (db > 0.0 && db < isect.w) {
-      isect = vec4(-sign(rd) * step(dbv, vec3(db)), db);
+      isect = vec4(-sign(rd) * step(sOrXsOrDbv, vec3(db)), db);
     }
   }
 }
 
 void isectSphere(inout vec4 isect, vec3 ro, vec3 rd, float r) {
   float b = dot(ro, rd);
-  float c = dot(ro, ro) - r * r;
-  float h = b * b - c;
+  float i_c = dot(ro, ro) - r * r;
+  float h = b * b - i_c;
 
   if (h > 0.0) {
     h = sqrt(h);
@@ -153,13 +153,13 @@ void isectCapsule(inout vec4 isect, vec3 ro, vec3 rd, vec3 tail, float r) {
   float tt = dot(tail, tail);
   float td = dot(tail, rd);
   float ot = dot(ro, tail);
-  float od = dot(ro, rd);
-  float oo = dot(ro, ro);
+  float i_od = dot(ro, rd);
+  float i_oo = dot(ro, ro);
 
   float a = tt - td * td;
-  float b = tt * od - ot * td;
-  float c = tt * oo - ot * ot - r * r * tt;
-  float h = b * b - a * c;
+  float b = tt * i_od - ot * td;
+  float i_c = tt * i_oo - ot * ot - r * r * tt;
+  float h = b * b - a * i_c;
 
   if (h > 0.0) {
     float t = (-b - sqrt(h)) / a;
@@ -211,9 +211,9 @@ void main() {
     vec3 rd = normalize(vec3(pt, -4.0));
     rd.zx *= rotate2D(0.01);
     rd.yz *= rotate2D(0.04);
-    vec3 rt = ro + rd * 10.0;
+    rd = ro + rd * 10.0; // rd is temporarily ray target
     ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
-    rd = normalize(rt - ro);
+    rd = normalize(rd - ro);
 
     vec3 beta = vec3(2.0 - length(p));
 
@@ -225,7 +225,7 @@ void main() {
       // -- intersect stuff ------------------------------------------------------------------------
       // exit sign
       const vec3 i_exitSignPos = vec3(0, 2.35, -2);
-      isect2 = vec4(FAR);
+      // isect2 = vec4(FAR);
       isectBox(isect2, ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
       if (isect2.w < isect.w) {
         isect = isect2;
@@ -248,11 +248,11 @@ void main() {
       isectBox(isect2, ro, rd, vec3(0.45, 0.3, 0.0));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
-        float dProhibitedPlate = max(
+        float i_dProhibitedPlate = max(
           sdgbox2(rp.xy, vec2(0.45, 0.3), 0.0).z,
           -sdgbox2(abs(abs(rp.xy - vec2(0, 0.28)) - vec2(0.3, 0)), vec2(0.015, 0), 0.01).z
         ) + 0.01 * cyclicNoise(10.0 * rp).x;
-        if (dProhibitedPlate < 0.0) {
+        if (i_dProhibitedPlate < 0.0) {
           isect = isect2;
           material = mat3(
             vec3(rp),
@@ -621,9 +621,9 @@ void main() {
           );
         } else {
           p = rp.xz;
-          float tileZ = (floor(rp.z / 0.2) + 0.5) * 0.2;
+          float i_tileZ = (floor(rp.z / 0.2) + 0.5) * 0.2;
 
-          if (abs(tileZ - rp.z) < 0.09) {
+          if (abs(i_tileZ - rp.z) < 0.09) {
             // panels
             material = mat3(
               vec3(0.8),
@@ -800,12 +800,12 @@ void main() {
         // is not chrome sphere
 
         // dirt
-        float n = 0.2 * smoothstep(0.0, 1.0, cyclicNoise(rp).x);
-        material[2].x = mix(material[2].x, 1.0, n);
+        float i_noiseDirt = 0.2 * smoothstep(0.0, 1.0, cyclicNoise(rp).x);
+        material[2].x = mix(material[2].x, 1.0, i_noiseDirt);
 
         // black water
-        float i_n = smoothstep(0.0, 1.0, cyclicNoise(rp / 2.0).y - rp.y + 0.3);
-        if (i_n > seed.x) {
+        float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp / 2.0).y - rp.y + 0.3);
+        if (i_noiseWater > seed.x) {
           material[0] = vec3(0);
           material[1] = vec3(0);
           material[2].x = 0.04;
@@ -832,7 +832,6 @@ void main() {
       // -- update ray and throughput --------------------------------------------------------------
       ro = rp + isect.xyz * 0.001;
       float sqRoughness = i_roughness * i_roughness;
-      float sqSqRoughness = sqRoughness * sqRoughness;
 
       // #ifdef DEBUG_NORMAL
       //   return vec4(0.5 + 0.5 * isect.xyz, 1.0);
@@ -852,7 +851,7 @@ void main() {
         fragColor.xyz += clamp(beta, 0.0, 4.0) * (1.0 - Fn) * i_emissive;
 
         // sample ggx or lambert
-        seed.y = sqrt((1.0 - seed.y) / (1.0 - spec * (1.0 - sqSqRoughness) * seed.y));
+        seed.y = sqrt((1.0 - seed.y) / (1.0 - spec * (1.0 - sqRoughness * sqRoughness) * seed.y));
         vec3 woOrH = orthBas(isect.xyz) * vec3(
           sqrt(1.0 - seed.y * seed.y) * sin(TAU * seed.z + vec2(0.0, TAU / 4.0)),
           seed.y
