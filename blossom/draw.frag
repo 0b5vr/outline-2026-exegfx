@@ -688,26 +688,6 @@ void main() {
             vec3(0.4, 0, 0)
           );
         }
-      } else if (material[2].z == MTL_EXIT_SIGN) {
-        vec2 p = 16.0 * material[0].xy;
-        if (abs(p.x) < 0.13 && abs(p.y) < 0.13) {
-          // sign
-          float d = 1.0;
-
-
-          material = mat3(
-            vec3(1),
-            0.1 * (abs(p.x) < 0.06 && abs(p.y) < 0.1 ? vec3(6) : vec3(0, 6, 2)),
-            vec3(0.2, 1, 0)
-          );
-        } else {
-          // frame
-          material = mat3(
-            vec3(0.9),
-            vec3(0),
-            vec3(0.4, 0, 0)
-          );
-        }
       } else if (material[2].z == MTL_PROHIBITED_PLATE) {
         vec2 pt = material[0].xy / vec2(0.012, 0.016);
 
