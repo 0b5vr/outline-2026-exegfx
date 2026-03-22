@@ -22,9 +22,7 @@ const float MTL_WALL_NO_SMOKING = 11.0;
 
 const float MTLMOD_SCRATCH = 20.0;
 
-const float PI = acos(-1.0);
-const float TAU = PI + PI;
-const float INV_SQRT2 = sqrt(0.5);
+const float TAU = 2 * acos(-1.0);
 const float FAR = 100.0;
 
 const int SAMPLES_PER_FRAME = 10;
@@ -34,8 +32,6 @@ const int MARCH_ITER = 80;
 // #define DEBUG_NORMAL
 
 // == common =======================================================================================
-uvec3 seed;
-
 // https://www.shadertoy.com/view/XlXcW4
 vec3 hash3f(vec3 s) {
   uvec3 r = floatBitsToUint(s);
