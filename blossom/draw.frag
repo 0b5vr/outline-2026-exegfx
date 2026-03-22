@@ -197,8 +197,7 @@ float mapChrome(vec3 p) {
 void main() {
   fragColor *= 0.0;
 
-  vec2 uv = gl_FragCoord.xy / resolution.xy;
-  vec2 p = (uv - 0.5);
+  vec2 p = gl_FragCoord.xy / resolution.xy - 0.5;
   p.x *= resolution.x / resolution.y;
 
   vec3 seed = hash3f(vec3(p, frame));
