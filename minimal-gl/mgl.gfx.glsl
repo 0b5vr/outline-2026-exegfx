@@ -1,6 +1,6 @@
 #version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
-#define INTERACTIVE_CAMERA
+// #define INTERACTIVE_CAMERA
 // #define DEBUG_GRID
 // #define DEBUG_NORMAL
 // #define DEBUG_FOCUS
@@ -233,9 +233,9 @@ vec4 draw() {
       vec3 ro = cameraInWorld[3].xyz;
       vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
     #else
-      vec3 ro = vec3(-1.2, 1.6, 11.0);
+      vec3 ro = vec3(-0.1, 1.6, 11.0);
       vec3 rd = normalize(vec3(pt, -4.0));
-      rd.zx *= rotate2D(0.12);
+      rd.zx *= rotate2D(0.01);
       rd.yz *= rotate2D(0.04);
       vec3 rt = ro + rd * 10.0;
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
