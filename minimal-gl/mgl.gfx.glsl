@@ -25,23 +25,24 @@ layout(location = 0) out vec4 outColor;   // display (tonemapped)
 layout(location = 1) out vec4 outAccum;   // accumulation: xyz = color sum, w = sample count
 
 
-const float MTL_WALL = 1.0;
-const float MTL_FLOOR = 3.0;
-const float MTL_CEIL = 4.0;
-const float MTL_CHROME_SPHERE = 5.0;
-const float MTL_EXIT_SIGN = 6.0;
-const float MTL_PROHIBITED_PLATE = 7.0;
-const float MTL_PROHIBITED_PIPE = 8.0;
-const float MTL_PROHIBITED_FEET = 9.0;
-const float MTL_WALL_BAR = 10.0;
-const float MTL_WALL_NO_SMOKING = 11.0;
+const int MTL_WALL = 1;
+const int MTL_FLOOR = 3;
+const int MTL_CEIL = 4;
+const int MTL_CHROME_SPHERE = 5;
+const int MTL_EXIT_SIGN = 6;
+const int MTL_PROHIBITED_PLATE = 7;
+const int MTL_PROHIBITED_PIPE = 8;
+const int MTL_PROHIBITED_FEET = 9;
+const int MTL_WALL_BAR = 10;
+const int MTL_WALL_NO_SMOKING = 11;
 
-const float MTLMOD_SCRATCH = 20.0;
+const int MTLMOD_SCRATCH = 20;
 
-const float TAU = 2 * acos(-1.0);
-const float FAR = 100.0;
+const float TAU = 2 * acos(-1);
+const int FAR = 100;
 
 const int SAMPLES_PER_FRAME = 10;
+const float SAMPLES_PER_FRAME_F = 10.0;
 const int PATH_ITER = 5;
 const int MARCH_ITER = 80;
 
@@ -66,12 +67,12 @@ mat2 rotate2D(float t) {
 }
 
 float i_safeDot(vec3 a, vec3 b) {
-  return clamp(dot(a, b), 0.0, 1.0);
+  return clamp(dot(a, b), 0, 1);
 }
 
 mat3 orthBas(vec3 z) {
   z = normalize(z);
-  vec3 i_up = abs(z.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
+  vec3 i_up = abs(z.y) < 0.99 ? vec3(0, 1, 0) : vec3(0, 0, 1);
   vec3 x = normalize(cross(i_up, z));
   return mat3(x, cross(z, x), z);
 }
@@ -81,12 +82,12 @@ vec3 cyclicNoise(vec3 p) {
   vec3 sum = vec3(0);
 
   for (int i = 0; i ++ < 5;) {
-    p = p * 2.0 * orthBas(vec3(3.0, 4.0, -5.0));
+    p = p * 2 * orthBas(vec3(3, 4, -5));
     p += sin(p.yzx);
-    sum = sum * 2.0 + cross(cos(p), sin(p.zxy));
+    sum += sum + cross(cos(p), sin(p.zxy));
   }
 
-  return sum / 31.0;
+  return sum / 31;
 }
 
 // == sdfs =========================================================================================
@@ -95,9 +96,9 @@ vec3 sdgbox2(vec2 p, vec2 sizeOrD, float r) {
   sizeOrD = abs(p) - sizeOrD;
   float g = max(sizeOrD.x, sizeOrD.y);
 
-  if (g > 0.0) {
+  if (g > 0) {
     // outside
-    vec2 q = max(sizeOrD, 0.0);
+    vec2 q = max(sizeOrD, 0);
     float l = length(q);
     return vec3(sign(p) * q / l, l - r);
   } else {
@@ -107,16 +108,16 @@ vec3 sdgbox2(vec2 p, vec2 sizeOrD, float r) {
 }
 
 void minSdArcPath(vec2 p, inout float d, float x0OrL, float y0OrR, float x1, float y1, float t) {
-  t = t == 0.0 ? 0.001 : t;
+  t = t == 0 ? 0.001 : t;
   p -= vec2(x0OrL, y0OrR);
   vec2 tail = vec2(x1 - x0OrL, y1 - y0OrR);
 
-  vec2 cs = cis(abs(t) / 2.0);
+  vec2 cs = cis(abs(t) / 2);
   x0OrL = length(tail);
-  y0OrR = x0OrL / 2.0 / cs.y;
+  y0OrR = x0OrL / 2 / cs.y;
   p *= mat2(tail.y, -tail.x, tail.x, tail.y) / x0OrL;
   p.x *= sign(t);
-  p -= y0OrR * cs * vec2(-1.0, 1.0);
+  p -= y0OrR * cs * vec2(-1, 1);
   p.y = abs(p.y);
   float i_dArc = (cs.y * p.x > cs.x * p.y)
     ? abs(length(p) - y0OrR)
@@ -136,11 +137,11 @@ void isectBox(inout vec4 isect, vec3 roOrXoOrDfv, vec3 rd, vec3 sOrXsOrDbv) {
   float df = max(max(roOrXoOrDfv.x, roOrXoOrDfv.y), roOrXoOrDfv.z);
   float db = min(min(sOrXsOrDbv.x, sOrXsOrDbv.y), sOrXsOrDbv.z);
   if (db >= df) {
-    if (df > 0.0 && df < isect.w) {
+    if (df > 0 && df < isect.w) {
       isect = vec4(-sign(rd) * step(vec3(df), roOrXoOrDfv), df);
     }
 
-    if (db > 0.0 && db < isect.w) {
+    if (db > 0 && db < isect.w) {
       isect = vec4(-sign(rd) * step(sOrXsOrDbv, vec3(db)), db);
     }
   }
@@ -151,15 +152,15 @@ void isectSphere(inout vec4 isect, vec3 ro, vec3 rd, float r) {
   float i_c = dot(ro, ro) - r * r;
   float h = b * b - i_c;
 
-  if (h > 0.0) {
+  if (h > 0) {
     h = sqrt(h);
     float t = -b - h;
-    if (t > 0.0 && t < isect.w) {
+    if (t > 0 && t < isect.w) {
       isect = vec4(normalize(ro + rd * t), t);
     }
 
     t = -b + h;
-    if (t > 0.0 && t < isect.w) {
+    if (t > 0 && t < isect.w) {
       isect = vec4(-normalize(ro + rd * t), t);
     }
   }
@@ -177,32 +178,32 @@ void isectCapsule(inout vec4 isect, vec3 ro, vec3 rd, vec3 tail, float r) {
   float i_c = tt * i_oo - ot * ot - r * r * tt;
   float h = b * b - a * i_c;
 
-  if (h > 0.0) {
+  if (h > 0) {
     float t = (-b - sqrt(h)) / a;
-    if (t > 0.0) {
-      float y = clamp(ot + t * td, 0.0, tt);
-      if (y > 0.0 && y < tt && t < isect.w) {
+    if (t > 0) {
+      float y = clamp(ot + t * td, 0, tt);
+      if (y > 0 && y < tt && t < isect.w) {
         // you might delete this if the precision doesn't matter
         isect = vec4((ro + rd * t - y / tt * tail) / r, t);
       }
 
-      isectSphere(isect, ro - clamp(y, 0.0, tt) / tt * tail, rd, r);
+      isectSphere(isect, ro - clamp(y, 0, tt) / tt * tail, rd, r);
     }
   }
 }
 
 // == marcher ======================================================================================
 float smin(float a, float b, float k) {
-  float h = max(k - abs(a - b), 0.0) / k;
-  return min(a, b) - h * h * h * k / 6.0;
+  float h = max(k - abs(a - b), 0) / k;
+  return min(a, b) - h * h * h * k / 6;
 }
 
 float mapChrome(vec3 p) {
   return 0.8 * smin(
     smin(
-      length(p + 0.4 * cyclicNoise(p / 2 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.7,
+      length(p + 0.4 * cyclicNoise(p / 2 + 14) - vec3(0, 1.2, 0)) - 0.7,
       2.5 - p.y,
-      2.0
+      2
     ),
     max(p.y, abs(p.x) - 1.5),
     1.5
@@ -211,7 +212,7 @@ float mapChrome(vec3 p) {
 
 // == draw =========================================================================================
 vec4 draw() {
-  vec4 fragColor = vec4(0.0);
+  vec4 fragColor = vec4(0);
 
   vec2 p = gl_FragCoord.xy / resolution.xy - 0.5;
   p.x *= resolution.x / resolution.y;
@@ -228,16 +229,16 @@ vec4 draw() {
       vec3 ro = cameraInWorld[3].xyz;
       vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
     #else
-      vec3 ro = vec3(-0.1, 1.6, 11.0);
-      vec3 rd = normalize(vec3(pt, -4.0));
+      vec3 ro = vec3(-0.1, 1.6, 11);
+      vec3 rd = normalize(vec3(pt, -4));
       rd.zx *= rotate2D(0.01);
       rd.yz *= rotate2D(0.04);
-      rd = ro + rd * 10.0; // rd is temporarily ray target
-      ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
+      rd = ro + rd * 10; // rd is temporarily ray target
+      ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0);
       rd = normalize(rd - ro);
     #endif
 
-    vec3 beta = vec3(2.0 - length(p));
+    vec3 beta = vec3(2 - length(p));
 
     for (int i = 0; i ++ < PATH_ITER;) {
       mat3 material;
@@ -263,18 +264,18 @@ vec4 draw() {
       ro.zx *= rotate2D(i_prohibitedRot);
       rd.zx *= rotate2D(i_prohibitedRot);
 
-      const vec3 i_signPos = vec3(0.0, 0.4, 0.0);
+      const vec3 i_signPos = vec3(0, 0.4, 0);
       ro -= i_signPos;
 
       isect2 = vec4(FAR);
-      isectBox(isect2, ro, rd, vec3(0.45, 0.3, 0.0));
+      isectBox(isect2, ro, rd, vec3(0.45, 0.3, 0));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         float i_dProhibitedPlate = max(
-          sdgbox2(rp.xy, vec2(0.45, 0.3), 0.0).z,
+          sdgbox2(rp.xy, vec2(0.45, 0.3), 0).z,
           -sdgbox2(abs(abs(rp.xy - vec2(0, 0.28)) - vec2(0.3, 0)), vec2(0.015, 0), 0.01).z
-        ) + 0.01 * cyclicNoise(10.0 * rp).x;
-        if (i_dProhibitedPlate < 0.0) {
+        ) + 0.01 * cyclicNoise(10 * rp).x;
+        if (i_dProhibitedPlate < 0) {
           isect = isect2;
           material = mat3(
             vec3(rp),
@@ -289,17 +290,17 @@ vec4 draw() {
 
       // prohibited sign pipe
       isect2 = vec4(FAR);
-      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
-      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
-      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0.0), rd, vec3(1.2, 0, 0), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0), rd, vec3(0, -1, 0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0), rd, vec3(0, -1, -0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(-0.6, 0.75, 0), rd, vec3(1.2, 0, 0), 0.02);
       isectCapsule(isect2, ro - vec3(-0.6, 0.1, 0.19), rd, vec3(1.2, 0, 0), 0.01);
       isectCapsule(isect2, ro - vec3(-0.6, 0.1, -0.19), rd, vec3(1.2, 0, 0), 0.01);
-      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, 0.3), 0.02);
-      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0.0), rd, vec3(0, -1, -0.3), 0.02);
-      isectBox(isect2, ro - vec3(-0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
-      isectBox(isect2, ro - vec3(0.3, 0.71, 0.0), rd, vec3(0.015, 0.03, 0.002));
-      isectBox(isect2, ro - vec3(-0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
-      isectBox(isect2, ro - vec3(0.61, 0.1, 0.0), rd, vec3(0.001, 0.02, 0.2));
+      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0), rd, vec3(0, -1, 0.3), 0.02);
+      isectCapsule(isect2, ro - vec3(0.6, 0.75, 0), rd, vec3(0, -1, -0.3), 0.02);
+      isectBox(isect2, ro - vec3(-0.3, 0.71, 0), rd, vec3(0.015, 0.03, 0.002));
+      isectBox(isect2, ro - vec3(0.3, 0.71, 0), rd, vec3(0.015, 0.03, 0.002));
+      isectBox(isect2, ro - vec3(-0.61, 0.1, 0), rd, vec3(0.001, 0.02, 0.2));
+      isectBox(isect2, ro - vec3(0.61, 0.1, 0), rd, vec3(0.001, 0.02, 0.2));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         isect = isect2;
@@ -389,13 +390,13 @@ vec4 draw() {
       }
 
       // chrome sphere
-      float i_chromeSpherePosZ = -4.0;
+      int i_chromeSpherePosZ = -4;
       ro.z -= i_chromeSpherePosZ;
       isect2 = vec4(FAR);
       isectBox(isect2, ro, rd, vec3(2.5));
       if (isect2.w < isect.w) {
         vec3 rp = ro;
-        float rl = 0.0;
+        float rl = 0;
         float dist;
 
         for (int i = 0; i ++ < MARCH_ITER;) {
@@ -408,7 +409,7 @@ vec4 draw() {
         }
 
         if (abs(dist) < 0.001 && rl < isect.w) {
-          vec2 d = vec2(0.0, 0.001);
+          vec2 d = vec2(0, 0.001);
           vec3 i_n = normalize(vec3(
             mapChrome(rp + d.yxx) - mapChrome(rp - d.yxx),
             mapChrome(rp + d.xyx) - mapChrome(rp - d.xyx),
@@ -418,14 +419,14 @@ vec4 draw() {
           material = mat3(
             mix(vec3(0), vec3(0.6, 0.68, 0.7), smoothstep(0.0, 0.5, rp.y)),
             vec3(0),
-            vec3(0.04, 1.0, MTL_CHROME_SPHERE)
+            vec3(0.04, 1, MTL_CHROME_SPHERE)
           );
         }
       }
       ro.z += i_chromeSpherePosZ;
 
       // -- if the ray misses then -----------------------------------------------------------------
-      if (isect.w > FAR - 1.0) {
+      if (isect.w > FAR - 1) {
         break;
       }
 
@@ -446,28 +447,28 @@ vec4 draw() {
           // brick wall
           float tileY = floor(rpt.y / 0.1);
           vec2 tileCenter = vec2(
-            (floor(rpt.x / 0.2 + mod(tileY, 2.0) * 0.5) - mod(tileY, 2.0) * 0.5) * 0.2 + 0.1,
+            (floor(rpt.x / 0.2 + mod(tileY, 2) * 0.5) - mod(tileY, 2) * 0.5) * 0.2 + 0.1,
             tileY * 0.1 + 0.05
           );
           vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.093, 0.043), 0.003);
           vec3 dice = hash3f(tileCenter.xyy);
-          vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp));
+          vec3 noise = 0.5 + 0.5 * sin(3 * cyclicNoise(rp));
 
           material = mat3(
             vec3(0.1 + 0.6 * noise.x),
-            vec3(0.0),
-            vec3(0.8, 0.0, 0.0)
+            vec3(0),
+            vec3(0.8, 0, 0)
           );
 
-          if (sdgTile.z < 0.0) {
+          if (sdgTile.z < 0) {
             material = mat3(
               mix(
                 pow(vec3(0.9, 0.7, 0.5), vec3(exp2(0.5 * dice.z))),
                 vec3(0.6 * noise.x),
                 0.2 * noise.y
               ),
-              vec3(0.0),
-              vec3(0.2 + 0.3 * noise.y, 0.0, 0.0)
+              vec3(0),
+              vec3(0.2 + 0.3 * noise.y, 0, 0)
             );
 
             vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
@@ -486,9 +487,9 @@ vec4 draw() {
       } else if (material[2].z == MTL_WALL_NO_SMOKING) {
         vec2 pp = material[0].zy;
         if (pp.x < -0.08) {
-          vec2 pt = pp.xy * 60.0 + vec2(16, 0);
+          vec2 pt = pp.xy * 60 + vec2(16, 0);
 
-          float d = 1.0;
+          float d = 1;
 
           // outside smoke
           minSdArcPath(pt, d, 6, 0, 4, 2, 1.6);
@@ -500,16 +501,16 @@ vec4 draw() {
           minSdArcPath(pt, d, 4, 1, 2, 1, 0);
           minSdArcPath(pt, d, 2, 1, 1, 2, -1.6);
           minSdArcPath(pt, d, 1, 2, 1, 3, 0);
-          minSdArcPath(pt, d, 1, 3, -1, 6, -2.0);
+          minSdArcPath(pt, d, 1, 3, -1, 6, -2);
 
-          bool i_shapeRed = length(pt) < 10.0 && (length(pt) > 8.0 || abs(pt.x + pt.y) < 1.5);
-          bool i_shapeBlack = d < 0.3 && pt.y > 0.0 || abs(pt.x) < 6.3 && abs(pt.y + 1.3) < 1.0 && abs(pt.x - 5.5) > 0.2 && abs(pt.x - 4.5) > 0.2;
+          bool i_shapeRed = length(pt) < 10 && (length(pt) > 8 || abs(pt.x + pt.y) < 1.5);
+          bool i_shapeBlack = d < 0.3 && pt.y > 0 || abs(pt.x) < 6.3 && abs(pt.y + 1.3) < 1 && abs(pt.x - 5.5) > 0.2 && abs(pt.x - 4.5) > 0.2;
 
           material[0] = i_shapeRed ? vec3(1, 0.2, 0.3) : i_shapeBlack ? vec3(0) : vec3(1);
         } else {
-          vec2 pt = pp.xy * 80.0 - vec2(6, 0);
+          vec2 pt = pp.xy * 80 - vec2(6, 0);
 
-          float d = 1.0;
+          float d = 1;
 
           // 禁
           minSdArcPath(pt, d, -7, 6, -1, 6, 0);
@@ -528,7 +529,7 @@ vec4 draw() {
           minSdArcPath(pt, d, 3, -4.5, 6.5, -7, 0.3);
 
           // 煙
-          pt.x -= 20.0;
+          pt.x -= 20;
           minSdArcPath(pt, d, -7, 4, -7, 0, 0);
           minSdArcPath(pt, d, -3, 3, -4, 1, 0);
           minSdArcPath(pt, d, -5, 7, -5, -1, 0);
@@ -559,9 +560,9 @@ vec4 draw() {
 
         // gap
         material = mat3(
-          vec3(0.1 + 0.1 * sin(3.0 * cyclicNoise(2.0 * p.xxy).x)),
-          vec3(0.0),
-          vec3(0.8, 0.0, 0.0)
+          vec3(0.1 + 0.1 * sin(3 * cyclicNoise(2 * p.xxy).x)),
+          vec3(0),
+          vec3(0.8, 0, 0)
         );
 
         vec2 tileCenter = floor(p / 0.3) * 0.3 + 0.15;
@@ -569,18 +570,18 @@ vec4 draw() {
           // tactile
           vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.135), 0.01);
 
-          if (sdgTile.z < 0.0) {
+          if (sdgTile.z < 0) {
             material = mat3(
               vec3(0.8, 0.5, 0.1),
-              vec3(0.0),
-              vec3(0.4, 0.0, MTLMOD_SCRATCH)
+              vec3(0),
+              vec3(0.4, 0, MTLMOD_SCRATCH)
             );
 
             p -= tileCenter;
             p.x -= (floor(p.x / 0.07) + 0.5) * 0.07;
             vec3 sdgTactile = sdgbox2(
               p,
-              vec2(0.0, 0.11),
+              vec2(0, 0.11),
               0.015
             );
             vec2 i_nEdge = step(abs(sdgTile.z), 0.004) * sdgTile.xy;
@@ -595,12 +596,12 @@ vec4 draw() {
           tileCenter = floor(p / 0.5) * 0.5 + 0.25;
           vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.235), 0.01);
 
-          if (sdgTile.z < 0.0) {
+          if (sdgTile.z < 0) {
             // tile
             material = mat3(
               vec3(tileCenter.x == -0.25 ? 0.2 : 0.4),
-              vec3(0.0),
-              vec3(0.4, 0.0, 0.0)
+              vec3(0),
+              vec3(0.4, 0, 0)
             );
 
             vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
@@ -611,35 +612,35 @@ vec4 draw() {
           }
 
           // direction sign
-          bool side = p.x < 0.0;
+          bool side = p.x < 0;
           p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.78) * sign(p.x));
           vec3 sdgDir = sdgbox2(p, vec2(0.15), 0.05);
-          if ((sdgDir + 0.04 * max(cyclicNoise(rp * 10.0), 0.0)).z < 0.0) {
+          if ((sdgDir + 0.04 * max(cyclicNoise(rp * 10), 0)).z < 0) {
             bool i_shape = (sdgDir.z > -0.01 || abs(p.x) < 0.16 && abs(p.x - p.y - 0.08) < 0.05) ^^ side;
 
             material = mat3(
               i_shape ? vec3(0.1, 0.1, 0.3) : vec3(0.9),
-              vec3(0.0),
-              vec3(0.5, 0.0, MTLMOD_SCRATCH)
+              vec3(0),
+              vec3(0.5, 0, MTLMOD_SCRATCH)
             );
           }
         }
       } else if (material[2].z == MTL_CEIL) {
         vec2 p = rp.xz;
-        p -= floor(p / 6.0 + 0.5) * 6.0;
+        p -= floor(p / 6 + 0.5) * 6;
         if (abs(p.x) < 0.7 && abs(p.y) < 0.2) {
           // light
           material = mat3(
             vec3(0.3),
-            rp.z > -3.0 ? vec3(10) : vec3(0),
-            vec3(0.04, 1.0, 0.0)
+            rp.z > -3 ? vec3(10) : vec3(0),
+            vec3(0.04, 1, 0)
           );
         } else if (abs(p.x) < 0.72 && abs(p.y) < 0.22) {
           // frame of light
           material = mat3(
             vec3(0.8),
-            vec3(0.0),
-            vec3(0.1, 1.0, 0.0)
+            vec3(0),
+            vec3(0.1, 1, 0)
           );
         } else {
           p = rp.xz;
@@ -662,10 +663,10 @@ vec4 draw() {
           }
         }
       } else if (material[2].z == MTL_EXIT_SIGN) {
-        vec2 p = 170.0 * material[0].xy;
-        if (abs(p.x) < 23.0 && abs(p.y) < 23.0) {
+        vec2 p = 170 * material[0].xy;
+        if (abs(p.x) < 23 && abs(p.y) < 23) {
           // sign
-          float d = 8.0;
+          float d = 8;
 
           // arms
           minSdArcPath(p, d, -14, 3, -9, 3, 0);
@@ -689,13 +690,13 @@ vec4 draw() {
           // door
           d = min(d, min(
             max(
-              12.0 - abs(p.x + min(0.0, p.y + 16.0)),
+              12 - abs(p.x + min(0, p.y + 16)),
               sign(p.x) - d
             ),
-            20.0 - p.y
+            20 - p.y
           ));
 
-          bool i_shape = d < 0.0;
+          bool i_shape = d < 0;
 
           material = mat3(
             vec3(1),
@@ -713,19 +714,19 @@ vec4 draw() {
       } else if (material[2].z == MTL_PROHIBITED_PLATE) {
         vec2 pt = material[0].xy / vec2(0.012, 0.016);
 
-        if (abs(pt.y) > 16.0) {
+        if (abs(pt.y) > 16) {
           material = mat3(
-            cos(0.6 * (pt.x - pt.y)) > 0.0
+            cos(0.6 * (pt.x - pt.y)) > 0
               ? vec3(1, 0.5, 0)
               : vec3(0),
-            vec3(0.0),
-            vec3(0.1, 0.0, 0.0)
+            vec3(0),
+            vec3(0.1, 0, 0)
           );
         } else {
-          float d = 1.0;
+          float d = 1;
 
           // 立
-          pt.x += 27.0;
+          pt.x += 27;
           minSdArcPath(pt, d, 0, 7, 0, 5, 0);
           minSdArcPath(pt, d, -6, 5, 6, 5, 0);
           minSdArcPath(pt, d, -4, 3, -2, -5, -0.1);
@@ -733,13 +734,13 @@ vec4 draw() {
           minSdArcPath(pt, d, -7, -7, 7, -7, 0);
 
           // 入
-          pt.x -= 18.0;
+          pt.x -= 18;
           minSdArcPath(pt, d, -3, 7, 0, 7, 0);
-          minSdArcPath(pt, d, 0, 7, -7, -7, -1.0);
-          minSdArcPath(pt, d, 0, 7, 7, -7, 1.0);
+          minSdArcPath(pt, d, 0, 7, -7, -7, -1);
+          minSdArcPath(pt, d, 0, 7, 7, -7, 1);
 
           // 禁
-          pt.x -= 18.0;
+          pt.x -= 18;
           minSdArcPath(pt, d, -7, 6, -1, 6, 0);
           minSdArcPath(pt, d, -4, 7, -4, 2, 0);
           minSdArcPath(pt, d, -4, 6, -7, 2.5, -0.2);
@@ -756,13 +757,13 @@ vec4 draw() {
           minSdArcPath(pt, d, 3, -4.5, 6.5, -7, 0.3);
 
           // 止
-          pt.x -= 18.0;
+          pt.x -= 18;
           minSdArcPath(pt, d, 0, 7, 0, -7, 0);
           minSdArcPath(pt, d, 0, 2, 6, 2, 0);
           minSdArcPath(pt, d, -4, 3, -4, -7, 0);
           minSdArcPath(pt, d, -7, -7, 7, -7, 0);
 
-          material[0] = d < 1.0
+          material[0] = d < 1
             ? vec3(0.7, 0, 0)
             : vec3(1);
         }
@@ -775,7 +776,7 @@ vec4 draw() {
 
         isect.xyz = normalize(isect.xyz);
       } else if (material[2].z == MTL_PROHIBITED_PIPE) {
-        float n = step(0.5, cyclicNoise(20.0 * rp).x);
+        float n = step(0.5, cyclicNoise(20 * rp).x);
 
         material = mat3(
           mix(
@@ -787,12 +788,12 @@ vec4 draw() {
           vec3(mix(0.4, 1.0, n), 0, MTLMOD_SCRATCH)
         );
 
-        isect.xyz = normalize(isect.xyz + 0.04 * cyclicNoise(80.0 * rp));
+        isect.xyz = normalize(isect.xyz + 0.04 * cyclicNoise(80 * rp));
       } else if (material[2].z == MTL_PROHIBITED_FEET) {
         material = mat3(
           vec3(0.3),
           vec3(0),
-          vec3(0.7, 1.0, MTLMOD_SCRATCH)
+          vec3(0.7, 1, MTLMOD_SCRATCH)
         );
       }
 
@@ -802,11 +803,11 @@ vec4 draw() {
         // is not chrome sphere
 
         // dirt
-        float i_noiseDirt = 0.2 * smoothstep(0.0, 1.0, cyclicNoise(rp).x);
-        material[2].x = mix(material[2].x, 1.0, i_noiseDirt);
+        float i_noiseDirt = 0.2 * smoothstep(0, 1, cyclicNoise(rp).x);
+        material[2].x = mix(material[2].x, 1, i_noiseDirt);
 
         // black water
-        float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp / 2.0).y - rp.y + 0.3);
+        float i_noiseWater = smoothstep(0, 1, cyclicNoise(rp / 2).y - rp.y + 0.3);
         if (i_noiseWater > seed.x) {
           material[0] = vec3(0);
           material[1] = vec3(0);
@@ -815,8 +816,8 @@ vec4 draw() {
       }
 
       if (material[2].z == MTLMOD_SCRATCH) {
-        vec3 i_nDisplace = 20.0 * cyclicNoise(rp.xyz / 2);
-        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 12.0);
+        vec3 i_nDisplace = 20 * cyclicNoise(rp.xyz / 2);
+        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 12);
         if (i_n > seed.x) {
           material = mat3(
             vec3(0.1, 0.06, 0.04),
@@ -833,12 +834,12 @@ vec4 draw() {
 
       // -- debug stuff ----------------------------------------------------------------------------
       #ifdef DEBUG_FOCUS
-        float v = exp(-10.0 * abs(isect.w - length(i_focalDepth)) / isect.w);
-        return v > 0.99 ? vec4(1, 0, 0, 1) : vec4(vec3(max(0.0, v)), 1);
+        float v = exp(-10 * abs(isect.w - length(i_focalDepth)) / isect.w);
+        return v > 0.99 ? vec4(1, 0, 0, 1) : vec4(vec3(max(0, v)), 1);
       #endif
 
       #ifdef DEBUG_NORMAL
-        return vec4(0.5 + 0.5 * isect.xyz, 1.0);
+        return vec4(0.5 + 0.5 * isect.xyz, 1);
       #endif
 
       // -- update ray and throughput --------------------------------------------------------------
@@ -849,23 +850,23 @@ vec4 draw() {
 
       {
         float dotNV = i_safeDot(isect.xyz, -rd);
-        float Fn = mix(0.04, 1.0, pow(1.0 - dotNV, 5.0));
+        float Fn = mix(0.04, 1.0, pow(1 - dotNV, 5));
         float spec = max(
           step(seed.x, Fn), // non metallic, fresnel
           i_metallic // metallic
         );
 
         // emissive
-        fragColor.xyz += clamp(beta, 0.0, 4.0) * (1.0 - Fn) * i_emissive;
+        fragColor.xyz += clamp(beta, 0, 4) * (1 - Fn) * i_emissive;
 
         // sample ggx or lambert
-        seed.y = sqrt((1.0 - seed.y) / (1.0 - spec * (1.0 - sqRoughness * sqRoughness) * seed.y));
+        seed.y = sqrt((1 - seed.y) / (1 - spec * (1 - sqRoughness * sqRoughness) * seed.y));
         vec3 woOrH = orthBas(isect.xyz) * vec3(
-          sqrt(1.0 - seed.y * seed.y) * sin(TAU * seed.z + vec2(0.0, TAU / 4.0)),
+          sqrt(1 - seed.y * seed.y) * sin(TAU * seed.z + vec2(0, TAU / 4)),
           seed.y
         );
 
-        if (spec > 0.0) {
+        if (spec > 0) {
           // specular
           // note: woOrH is H right now
           vec3 i_H = woOrH;
@@ -878,18 +879,18 @@ vec4 draw() {
 
           // fresnel
           vec3 i_F0 = mix(vec3(0.04), i_baseColor, i_metallic);
-          vec3 i_Fh = mix(i_F0, vec3(1.0), pow(1.0 - dotVH, 5.0));
+          vec3 i_Fh = mix(i_F0, vec3(1), pow(1 - dotVH, 5));
 
           // brdf
           //   Fh / Fn * G * VdotH / (NdotH * NdotV)
           // = Fh / Fn * G1L * G1V * V.H / N.H / N.V
-          // = Fh / Fn * N.L / (N.L * (1 - k) + k) * N.V / (N.V * (1.0 - k) + k) * V.H / N.H / N.V
-          // = Fh / Fn * N.L / (N.L * (1 - k) + k) / (N.V * (1.0 - k) + k) * V.H / N.H
+          // = Fh / Fn * N.L / (N.L * (1 - k) + k) * N.V / (N.V * (1 - k) + k) * V.H / N.H / N.V
+          // = Fh / Fn * N.L / (N.L * (1 - k) + k) / (N.V * (1 - k) + k) * V.H / N.H
           float k = 0.5 * sqRoughness;
-          beta *= dotNL > 0.0 && dotNH > 0.0
-            ? i_Fh / mix(Fn, 1.0, i_metallic)
-                * dotNL / (dotNL * (1.0 - k) + k)
-                / (dotNV * (1.0 - k) + k)
+          beta *= dotNL > 0 && dotNH > 0
+            ? i_Fh / mix(Fn, 1, i_metallic)
+                * dotNL / (dotNL * (1 - k) + k)
+                / (dotNV * (1 - k) + k)
                 * dotVH / dotNH
             : vec3(0);
 
@@ -898,7 +899,7 @@ vec4 draw() {
         } else {
           // diffuse
           // note: woOrH is wo right now
-          if (dot(woOrH, isect.xyz) < 0.0) {
+          if (dot(woOrH, isect.xyz) < 0) {
             break;
           }
 
@@ -908,10 +909,10 @@ vec4 draw() {
           float i_dotVH = i_safeDot(-rd, i_H);
 
           // fresnel
-          float i_Fh = mix(0.04, 1.0, pow(1.0 - i_dotVH, 5.0));
+          float i_Fh = mix(0.04, 1.0, pow(1 - i_dotVH, 5));
 
           // brdf
-          beta *= (1.0 - i_Fh) / (1.0 - Fn) * i_baseColor;
+          beta *= (1 - i_Fh) / (1 - Fn) * i_baseColor;
         }
 
         // prepare the rd for the next ray
@@ -924,11 +925,11 @@ vec4 draw() {
     }
   }
 
-  fragColor.w = float(SAMPLES_PER_FRAME);
+  fragColor.w = SAMPLES_PER_FRAME_F;
 
   #ifdef DEBUG_GRID
-    vec2 grid = step(abs(fract(4.0 * p - 0.5) - 0.5) * resolution.y, vec2(4.0));
-    fragColor = mix(fragColor, vec4(1.0), 0.5 * max(grid.x, grid.y));
+    vec2 grid = step(abs(fract(4 * p - 0.5) - 0.5) * resolution.y, vec2(4));
+    fragColor = mix(fragColor, vec4(1), 0.5 * max(grid.x, grid.y));
   #endif
 
   return fragColor;
@@ -954,7 +955,7 @@ vec3 present(vec3 color) {
     -0.00327, -0.07276,  1.07602
   );
 
-  color = clamp(color, 0.0, 1.0);
+  color = clamp(color, 0, 1);
 
   // sRGB OETF
   color = mix(
@@ -981,7 +982,7 @@ void main() {
     );
 
     if (floor(gl_FragCoord.xy) == vec2(0)) {
-      outColor = vec4(cameraStateHash, 1.0);
+      outColor = vec4(cameraStateHash, 1);
       return;
     }
 
@@ -991,10 +992,10 @@ void main() {
   #endif
 
   vec4 accumPrev = time < 0.1 || isCameraChanged
-    ? vec4(0.0)
+    ? vec4(0)
     : texelFetch(accumBuffer, ivec2(gl_FragCoord.xy), 0);
   mgl_frame = accumPrev.w;
 
   outAccum = accumPrev + draw();
-  outColor = vec4(present(outAccum.rgb / outAccum.a), 1.0);
+  outColor = vec4(present(outAccum.rgb / outAccum.a), 1);
 }
