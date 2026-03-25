@@ -30,7 +30,7 @@ void main() {
     -0.00327, -0.07276,  1.07602
   );
 
-  color = clamp(color, 0, 1);
+  color = clamp(color, 0.0, 1.0);
 
   // sRGB OETF
   color = mix(
@@ -42,5 +42,5 @@ void main() {
   // color grading
   color = mix(vec3(0.03), vec3(0.9), color);
 
-  fragColor = vec4(color, 1);
+  fragColor = vec4(color,1);
 }
