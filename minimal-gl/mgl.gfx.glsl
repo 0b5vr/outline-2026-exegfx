@@ -394,7 +394,7 @@ vec4 draw() {
       ro.z -= i_chromeSpherePosZ;
       isect2 = vec4(FAR);
       isectBox(isect2, ro, rd, vec3(2.5));
-      if (isect2.w < isect.w) {
+      if (isect2.w < FAR) {
         vec3 rp = ro;
         float rl = 0.0;
         float dist;
