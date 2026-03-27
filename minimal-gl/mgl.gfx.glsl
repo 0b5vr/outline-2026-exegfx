@@ -941,22 +941,20 @@ vec4 draw() {
 
 // == present ======================================================================================
 vec3 present(vec3 color) {
-  // ACES filmic tone mapping
+  // ACES-like cringe tone mapping
   // Ref: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl
   color *= mat3(
-    0.59719, 0.35458, 0.04823,
-    0.07600, 0.90834, 0.01566,
-    0.02840, 0.13383, 0.83777
+    0.60, 0.35, 0.05,
+    0.08, 0.90, 0.02,
+    0.03, 0.13, 0.84
   );
 
-  vec3 i_a = color * (color + 0.0245786) - 0.000090537;
-  vec3 i_b = color * (0.983729 * color + 0.4329510) + 0.238081;
-  color = i_a / i_b;
+  color = smoothstep(1.0, 0.0, exp(-color));
 
   color *= mat3(
-    1.60475, -0.53108, -0.07367,
-    -0.10208,  1.10813, -0.00605,
-    -0.00327, -0.07276,  1.07602
+    1.60, -0.53, -0.07,
+    -0.10, 1.11, -0.01,
+    -0.01, -0.07, 1.08
   );
 
   color = clamp(color, 0.0, 1.0);
@@ -969,7 +967,7 @@ vec3 present(vec3 color) {
   );
 
   // color grading
-  color = mix(vec3(0.03), vec3(0.9), color);
+  color = mix(vec3(0.1), vec3(0.8, 0.9, 1.0), color);
 
   return color;
 }
