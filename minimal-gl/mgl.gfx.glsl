@@ -832,6 +832,16 @@ vec4 draw() {
       float i_roughness = material[2].x;
       float i_metallic = material[2].y;
 
+      // -- debug stuff ----------------------------------------------------------------------------
+      #ifdef DEBUG_FOCUS
+        float v = exp(-10 * abs(isect.w - length(i_focalDepth)) / isect.w);
+        return v > 0.99 ? vec4(1, 0, 0, 1) : vec4(vec3(max(0, v)), 1);
+      #endif
+
+      #ifdef DEBUG_NORMAL
+        return vec4(0.5 + 0.5 * isect.xyz, 1);
+      #endif
+
       // -- update ray and throughput --------------------------------------------------------------
       ro = rp + isect.xyz * 0.001;
       float sqRoughness = i_roughness * i_roughness;
