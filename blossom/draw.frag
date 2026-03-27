@@ -185,12 +185,12 @@ float smin(float a, float b, float k) {
 float mapChrome(vec3 p) {
   return 0.8 * smin(
     smin(
-      length(p + 0.4 * cyclicNoise(p * 0.5 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.7,
+      length(p + 0.4 * cyclicNoise(p * 0.5 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.8,
       2.5 - p.y,
       2.0
     ),
-    max(p.y, abs(p.x) - 1.5),
-    1.5
+    p.y,
+    1.0
   );
 }
 
@@ -610,7 +610,7 @@ void main() {
           // light
           material = mat3(
             vec3(0.3),
-            rp.z > -3.0 ? vec3(10) : vec3(0),
+            vec3(10.0 * smoothstep(rp.z, 0.0, 1.0)), // cringe
             vec3(0.04, 1.0, 0.0)
           );
         } else if (abs(p.x) < 0.72 && abs(p.y) < 0.22) {
@@ -785,7 +785,7 @@ void main() {
         material[2].x = mix(material[2].x, 1.0, i_noiseDirt);
 
         // black water
-        float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp / 2.0).y - rp.y + 0.3);
+        float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp).y - rp.y + 0.3);
         if (i_noiseWater > seed.x) {
           material[0] = vec3(0);
           material[1] = vec3(0);
