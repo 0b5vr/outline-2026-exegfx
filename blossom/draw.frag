@@ -9,23 +9,24 @@ layout(location = 1) uniform int frame;
 
 /* vvv your shader goes here vvv */
 
-const float MTL_WALL = 1.0;
-const float MTL_FLOOR = 3.0;
-const float MTL_CEIL = 4.0;
-const float MTL_CHROME_SPHERE = 5.0;
-const float MTL_EXIT_SIGN = 6.0;
-const float MTL_PROHIBITED_PLATE = 7.0;
-const float MTL_PROHIBITED_PIPE = 8.0;
-const float MTL_PROHIBITED_FEET = 9.0;
-const float MTL_WALL_BAR = 10.0;
-const float MTL_WALL_NO_SMOKING = 11.0;
+const int MTL_WALL = 1;
+const int MTL_FLOOR = 3;
+const int MTL_CEIL = 4;
+const int MTL_CHROME_SPHERE = 5;
+const int MTL_EXIT_SIGN = 6;
+const int MTL_PROHIBITED_PLATE = 7;
+const int MTL_PROHIBITED_PIPE = 8;
+const int MTL_PROHIBITED_FEET = 9;
+const int MTL_WALL_BAR = 10;
+const int MTL_WALL_NO_SMOKING = 11;
 
-const float MTLMOD_SCRATCH = 20.0;
+const int MTLMOD_SCRATCH = 20;
 
-const float TAU = 2 * acos(-1.0);
+const float TAU = 2 * acos(-1);
 const float FAR = 100.0;
 
 const int SAMPLES_PER_FRAME = 10;
+const float SAMPLES_PER_FRAME_F = 10.0;
 const int PATH_ITER = 5;
 const int MARCH_ITER = 80;
 
@@ -55,7 +56,7 @@ float i_safeDot(vec3 a, vec3 b) {
 
 mat3 orthBas(vec3 z) {
   z = normalize(z);
-  vec3 i_up = abs(z.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
+  vec3 i_up = abs(z.y) < 0.99 ? vec3(0, 1, 0) : vec3(0, 0, 1);
   vec3 x = normalize(cross(i_up, z));
   return mat3(x, cross(z, x), z);
 }
@@ -65,7 +66,7 @@ vec3 cyclicNoise(vec3 p) {
   vec3 sum = vec3(0);
 
   for (int i = 0; i ++ < 5;) {
-    p *= 2.0 * orthBas(vec3(3.0, 4.0, -5.0));
+    p *= 2.0 * orthBas(vec3(3, 4, -5));
     p += sin(p.yzx);
     sum = sum * 2.0 + cross(cos(p), sin(p.zxy));
   }
@@ -184,7 +185,7 @@ float smin(float a, float b, float k) {
 float mapChrome(vec3 p) {
   return 0.8 * smin(
     smin(
-      length(p + 0.4 * cyclicNoise(p / 2 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.7,
+      length(p + 0.4 * cyclicNoise(p * 0.5 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.7,
       2.5 - p.y,
       2.0
     ),
@@ -224,7 +225,7 @@ void main() {
 
       // -- intersect stuff ------------------------------------------------------------------------
       // exit sign
-      const vec3 i_exitSignPos = vec3(0, 2.35, -2);
+      const vec3 i_exitSignPos = vec3(0.0, 2.35, -2.0);
       // isect2 = vec4(FAR);
       isectBox(isect2, ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
       if (isect2.w < isect.w) {
@@ -250,7 +251,7 @@ void main() {
         vec3 rp = ro + rd * isect2.w;
         float i_dProhibitedPlate = max(
           sdgbox2(rp.xy, vec2(0.45, 0.3), 0.0).z,
-          -sdgbox2(abs(abs(rp.xy - vec2(0, 0.28)) - vec2(0.3, 0)), vec2(0.015, 0), 0.01).z
+          -sdgbox2(abs(abs(rp.xy - vec2(0.0, 0.28)) - vec2(0.3, 0.0)), vec2(0.015, 0.0), 0.01).z
         ) + 0.01 * cyclicNoise(10.0 * rp).x;
         if (i_dProhibitedPlate < 0.0) {
           isect = isect2;
@@ -291,8 +292,8 @@ void main() {
 
       // prohibited sign feet
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(-0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
-      isectBox(isect2, ro - vec3(0.6, 0, 0), rd, vec3(0.04, 0.01, 0.3));
+      isectBox(isect2, ro - vec3(-0.6, 0.0, 0.0), rd, vec3(0.04, 0.01, 0.3));
+      isectBox(isect2, ro - vec3(0.6, 0.0, 0.0), rd, vec3(0.04, 0.01, 0.3));
       if (isect2.w < isect.w) {
         vec3 rp = ro + rd * isect2.w;
         isect = isect2;
@@ -309,7 +310,7 @@ void main() {
 
       // floor
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.5, 1, 100));
+      isectBox(isect2, ro - vec3(0.0, -1.0, 10.0), rd, vec3(1.5, 1.0, 100));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_FLOOR);
@@ -317,7 +318,7 @@ void main() {
 
       // gutter
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, -1, 10), rd, vec3(1.6, 0.98, 100));
+      isectBox(isect2, ro - vec3(0.0, -1.0, 10.0), rd, vec3(1.6, 0.98, 100));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL);
@@ -325,16 +326,16 @@ void main() {
 
       // wall
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(-5, 0, 10), rd, vec3(3.4, 3, 100));
-      isectBox(isect2, ro - vec3(5, 0, 10), rd, vec3(3.4, 3, 100));
-      isectBox(isect2, ro - vec3(0, 0, 20), rd, vec3(10, 10, 0));
+      isectBox(isect2, ro - vec3(-5.0, 0.0, 10.0), rd, vec3(3.4, 3.0, 100));
+      isectBox(isect2, ro - vec3(5.0, 0.0, 10.0), rd, vec3(3.4, 3.0, 100));
+      isectBox(isect2, ro - vec3(0.0, 0.0, 20.0), rd, vec3(10.0, 10.0, 0.0));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL);
       }
 
       // no smoking
-      const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, 0);
+      const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, 0.0);
       ro -= i_noSmokingSignPos;
       isect2 = vec4(FAR);
       isectBox(isect2, ro, rd, vec3(0.01, 0.25, 0.5));
@@ -351,8 +352,8 @@ void main() {
 
       // wall bar
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
-      isectBox(isect2, ro - vec3(-1.6, 0, 1.5), rd, vec3(0.01, 3, 0.1));
+      isectBox(isect2, ro - vec3(1.6, 0.0, 1.5), rd, vec3(0.01, 3.0, 0.1));
+      isectBox(isect2, ro - vec3(-1.6, 0.0, 1.5), rd, vec3(0.01, 3.0, 0.1));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_WALL_BAR);
@@ -360,7 +361,7 @@ void main() {
 
       // ceil
       isect2 = vec4(FAR);
-      isectBox(isect2, ro - vec3(0, 2.5, 10), rd, vec3(100, 0, 100));
+      isectBox(isect2, ro - vec3(0.0, 2.5, 10.0), rd, vec3(100.0, 0.0, 100.0));
       if (isect2.w < isect.w) {
         isect = isect2;
         material = mat3(MTL_CEIL);
@@ -418,7 +419,7 @@ void main() {
           material = mat3(
             vec3(0.1),
             vec3(0),
-            vec3(0.4, 0, 0)
+            vec3(0.4, 0.0, 0.0)
           );
         } else {
           // brick wall
@@ -433,7 +434,7 @@ void main() {
 
           material = mat3(
             vec3(0.1 + 0.6 * noise.x),
-            vec3(0.0),
+            vec3(0),
             vec3(0.8, 0.0, 0.0)
           );
 
@@ -444,22 +445,22 @@ void main() {
                 vec3(0.6 * noise.x),
                 0.2 * noise.y
               ),
-              vec3(0.0),
+              vec3(0),
               vec3(0.2 + 0.3 * noise.y, 0.0, 0.0)
             );
 
             vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
             isect.xyz = normalize(basis * vec3(
               i_nEdge + 0.03 * (dice.xy - 0.5),
-              2
+              2.0
             ));
           }
         }
       } else if (material[2].z == MTL_WALL_BAR) {
         material = mat3(
           vec3(0.5),
-          vec3(0, 0, 0),
-          vec3(0.4, 1, 0)
+          vec3(0),
+          vec3(0.4, 1.0, 0.0)
         );
       } else if (material[2].z == MTL_WALL_NO_SMOKING) {
         vec2 pp = material[0].zy;
@@ -524,13 +525,13 @@ void main() {
           minSdArcPath(pt, d, 3, -1, 3, -7, 0);
           minSdArcPath(pt, d, -1, -7, 7, -7, 0);
 
-          material[0] = d < 0.8 ? vec3(1, 0.2, 0.3) : vec3(1);
+          material[0] = d < 0.8 ? vec3(1.0, 0.2, 0.3) : vec3(1);
         }
 
         material = mat3(
           mix(vec3(0.1), vec3(0.9), material[0]),
           vec3(0),
-          vec3(0.4, 0, MTLMOD_SCRATCH)
+          vec3(0.4, 0.0, MTLMOD_SCRATCH)
         );
       } else if (material[2].z == MTL_FLOOR) {
         vec2 p = rpt.xy;
@@ -538,7 +539,7 @@ void main() {
         // gap
         material = mat3(
           vec3(0.1 + 0.1 * sin(3.0 * cyclicNoise(2.0 * p.xxy).x)),
-          vec3(0.0),
+          vec3(0),
           vec3(0.8, 0.0, 0.0)
         );
 
@@ -550,7 +551,7 @@ void main() {
           if (sdgTile.z < 0.0) {
             material = mat3(
               vec3(0.8, 0.5, 0.1),
-              vec3(0.0),
+              vec3(0),
               vec3(0.4, 0.0, MTLMOD_SCRATCH)
             );
 
@@ -577,7 +578,7 @@ void main() {
             // tile
             material = mat3(
               vec3(tileCenter.x == -0.25 ? 0.2 : 0.4),
-              vec3(0.0),
+              vec3(0),
               vec3(0.4, 0.0, 0.0)
             );
 
@@ -597,7 +598,7 @@ void main() {
 
             material = mat3(
               i_shape ? vec3(0.1, 0.1, 0.3) : vec3(0.9),
-              vec3(0.0),
+              vec3(0),
               vec3(0.5, 0.0, MTLMOD_SCRATCH)
             );
           }
@@ -616,7 +617,7 @@ void main() {
           // frame of light
           material = mat3(
             vec3(0.8),
-            vec3(0.0),
+            vec3(0),
             vec3(0.1, 1.0, 0.0)
           );
         } else {
@@ -628,14 +629,14 @@ void main() {
             material = mat3(
               vec3(0.8),
               vec3(0),
-              vec3(0.4, 0, 0)
+              vec3(0.4, 0.0, 0.0)
             );
           } else {
             // gap
             material = mat3(
               vec3(0.02),
               vec3(0),
-              vec3(0.8, 0, 0)
+              vec3(0.8, 0.0, 0.0)
             );
           }
         }
@@ -685,7 +686,7 @@ void main() {
           material = mat3(
             vec3(0.9),
             vec3(0),
-            vec3(0.4, 0, 0)
+            vec3(0.4, 0.0, 0.0)
           );
         }
       } else if (material[2].z == MTL_PROHIBITED_PLATE) {
@@ -694,9 +695,9 @@ void main() {
         if (abs(pt.y) > 16.0) {
           material = mat3(
             cos(0.6 * (pt.x - pt.y)) > 0.0
-              ? vec3(1, 0.5, 0)
+              ? vec3(1.0, 0.5, 0.0)
               : vec3(0),
-            vec3(0.0),
+            vec3(0),
             vec3(0.1, 0.0, 0.0)
           );
         } else {
@@ -748,7 +749,7 @@ void main() {
         material = mat3(
           mix(vec3(0.04), vec3(0.9), material[0]),
           vec3(0),
-          vec3(0.1, 0, MTLMOD_SCRATCH)
+          vec3(0.1, 0.0, MTLMOD_SCRATCH)
         );
 
         isect.xyz = normalize(isect.xyz);
@@ -762,7 +763,7 @@ void main() {
             n
           ),
           vec3(0),
-          vec3(mix(0.4, 1.0, n), 0, MTLMOD_SCRATCH)
+          vec3(mix(0.4, 1.0, n), 0.0, MTLMOD_SCRATCH)
         );
 
         isect.xyz = normalize(isect.xyz + 0.04 * cyclicNoise(80.0 * rp));
@@ -794,12 +795,12 @@ void main() {
 
       if (material[2].z == MTLMOD_SCRATCH) {
         vec3 i_nDisplace = 20.0 * cyclicNoise(1.0 * rp.xyz);
-        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 8.0);
+        float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 8);
         if (i_n > seed.x) {
           material = mat3(
             vec3(0.1, 0.06, 0.04),
             material[1],
-            vec3(1, 0, 0)
+            vec3(1.0, 0.0, 0.0)
           );
         }
       }
@@ -821,7 +822,7 @@ void main() {
 
       {
         float dotNV = i_safeDot(isect.xyz, -rd);
-        float Fn = mix(0.04, 1.0, pow(1.0 - dotNV, 5.0));
+        float Fn = mix(0.04, 1.0, pow(1.0 - dotNV, 5));
         float spec = max(
           step(seed.x, Fn), // non metallic, fresnel
           i_metallic // metallic
@@ -850,7 +851,7 @@ void main() {
 
           // fresnel
           vec3 i_F0 = mix(vec3(0.04), i_baseColor, i_metallic);
-          vec3 i_Fh = mix(i_F0, vec3(1.0), pow(1.0 - dotVH, 5.0));
+          vec3 i_Fh = mix(i_F0, vec3(1.0), pow(1.0 - dotVH, 5));
 
           // brdf
           //   Fh / Fn * G * VdotH / (NdotH * NdotV)
@@ -880,7 +881,7 @@ void main() {
           float i_dotVH = i_safeDot(-rd, i_H);
 
           // fresnel
-          float i_Fh = mix(0.04, 1.0, pow(1.0 - i_dotVH, 5.0));
+          float i_Fh = mix(0.04, 1.0, pow(1.0 - i_dotVH, 5));
 
           // brdf
           beta *= (1.0 - i_Fh) / (1.0 - Fn) * i_baseColor;
@@ -896,5 +897,5 @@ void main() {
     }
   }
 
-  fragColor.w = float(SAMPLES_PER_FRAME);
+  fragColor.w = SAMPLES_PER_FRAME_F;
 }
