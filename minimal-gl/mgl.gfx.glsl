@@ -375,8 +375,10 @@ vec4 draw() {
 
         // wall bar
         isect2 = vec4(FAR);
-        isectBox(isect2, ro - vec3(1.6, 0.0, 1.5), rd, vec3(0.01, 3.0, 0.1));
-        isectBox(isect2, ro - vec3(-1.6, 0.0, 1.5), rd, vec3(0.01, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(1.6, 0.0, 1.4), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(-1.6, 0.0, 1.4), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(-1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
         if (isect2.w < isect.w) {
           isect = isect2;
           material = mat3(MTL_WALL_BAR);
