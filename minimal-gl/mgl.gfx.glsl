@@ -239,7 +239,7 @@ vec4 draw() {
         rd = normalize(rd - ro);
       #endif
 
-      vec3 beta = vec3(1);
+      vec3 beta = vec3(2.0 - length(p));
 
       for (int i = 0; i ++ < PATH_ITER;) {
         mat3 material;
@@ -634,7 +634,7 @@ vec4 draw() {
             // light
             material = mat3(
               vec3(0.3),
-              vec3(10.0),
+              vec3(10.0 * smoothstep(rp.z, 0.0, 1.0)), // cringe
               vec3(0.04, 1.0, 0.0)
             );
           } else {
@@ -695,7 +695,7 @@ vec4 draw() {
 
             material = mat3(
               vec3(1),
-              i_shape ? vec3(0.0, 1.0, 0.5) : vec3(1),
+              i_shape ? vec3(0, 2, 1) : vec3(2),
               vec3(0.2, 1, 0)
             );
           } else {
