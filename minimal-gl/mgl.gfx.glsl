@@ -44,7 +44,7 @@ const float FAR = 100.0;
 const int SAMPLES_PER_FRAME = 10;
 const float SAMPLES_PER_FRAME_F = 10.0;
 const int PATH_ITER = 5;
-const int MARCH_ITER = 80;
+const int MARCH_ITER = 120;
 
 float mgl_frame;
 
@@ -199,14 +199,14 @@ float smin(float a, float b, float k) {
 }
 
 float mapChrome(vec3 p) {
-  return 0.8 * smin(
+  return smin(
     smin(
       length(p + 0.4 * cyclicNoise(p * 0.5 + 14.0) - vec3(0.0, 1.2, 0.0)) - 0.8,
       2.5 - p.y,
-      2.0
+      1.5
     ),
-    p.y,
-    1.0
+    length(vec2(p.x - clamp(p.x, -1.5, 1.5), p.y)),
+    1.5
   );
 }
 
@@ -396,14 +396,14 @@ vec4 draw() {
         float i_chromeSpherePosZ = -4.0;
         ro.z -= i_chromeSpherePosZ;
         isect2 = vec4(FAR);
-        isectBox(isect2, ro, rd, vec3(2.5));
+        isectBox(isect2, ro, rd, vec3(1.6, 2.5, 1.6));
         if (isect2.w < FAR) {
           vec3 rp = ro;
           float rl = 0.0;
           float dist;
 
           for (int i = 0; i ++ < MARCH_ITER;) {
-            dist = mapChrome(rp) + 0.001 * seed.x;
+            dist = 0.8 * mapChrome(rp) + 0.001 * seed.x;
             rl += dist;
             rp += dist * rd;
             if (abs(dist) < 0.0001 || rl > isect.w) {
@@ -420,7 +420,7 @@ vec4 draw() {
             ));
             isect = vec4(i_n, rl);
             material = mat3(
-              mix(vec3(0), vec3(0.6, 0.68, 0.7), smoothstep(0.0, 0.5, rp.y)),
+              vec3(0.6, 0.67, 0.7),
               vec3(0),
               vec3(0.04, 1.0, MTL_CHROME_SPHERE)
             );
