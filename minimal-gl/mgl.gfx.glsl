@@ -577,9 +577,8 @@ vec4 draw() {
               material = mat3(
                 vec3(0.8, 0.5, 0.1),
                 vec3(0),
-                vec3(0.4, 0.0, MTLMOD_SCRATCH)
+                vec3(0.1, 0.0, MTLMOD_SCRATCH)
               );
-
               p -= tileCenter;
               p.x -= (floor(p.x / 0.07) + 0.5) * 0.07;
               vec3 sdgTactile = sdgbox2(
@@ -591,7 +590,7 @@ vec4 draw() {
               vec2 i_nEdgeTactile = step(abs(sdgTactile.z), 0.002) * sdgTactile.xy;
               isect.xyz = normalize(basis * vec3(
                 i_nEdge + i_nEdgeTactile + 0.03 * hash3f(tileCenter.xyy).xy,
-                2
+                1
               ));
             }
           } else {
