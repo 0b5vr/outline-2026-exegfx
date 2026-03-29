@@ -232,7 +232,7 @@ vec4 draw() {
       vec3 ro = vec3(-0.1, 1.6, 11.0);
       vec3 rd = normalize(vec3(pt, -4.0));
       rd.zx *= rotate2D(0.01);
-      rd.yz *= rotate2D(0.04);
+      rd.yz *= rotate2D(0.045);
       rd = ro + rd * 10.0; // rd is temporarily ray target
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
       rd = normalize(rd - ro);

@@ -137,7 +137,7 @@ const char *draw_frag =
        "w=f(w);"
        "vec3 a=vec3(-.1,1.6,11),d=normalize(vec3(y,-4));"
        "d.zx*=s(.01);"
-       "d.yz*=s(.04);"
+       "d.yz*=s(.045);"
        "d=a+d*10.;"
        "a+=.01*vec3(f(x*w.z)*sqrt(w.y),0);"
        "d=normalize(d-a);"
