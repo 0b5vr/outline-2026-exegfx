@@ -619,7 +619,7 @@ void main() {
             // light
             material = mat3(
               vec3(0.3),
-              vec3(10.0 * smoothstep(rp.z, 0.0, 1.0)), // cringe
+              vec3(10.0),
               vec3(0.04, 1.0, 0.0)
             );
           } else {
