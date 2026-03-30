@@ -10,17 +10,16 @@ layout(location = 1) uniform int frame;
 /* vvv your shader goes here vvv */
 
 const int MTL_WALL = 1;
-const int MTL_FLOOR = 3;
-const int MTL_CEIL = 4;
-const int MTL_CHROME_SPHERE = 5;
-const int MTL_EXIT_SIGN = 6;
-const int MTL_PROHIBITED_PLATE = 7;
-const int MTL_PROHIBITED_PIPE = 8;
-const int MTL_PROHIBITED_FEET = 9;
-const int MTL_WALL_BAR = 10;
-const int MTL_WALL_NO_SMOKING = 11;
+const int MTL_FLOOR = 2;
+const int MTL_CEIL = 3;
+const int MTL_CHROME_SPHERE = 4;
+const int MTL_EXIT_SIGN = 5;
+const int MTL_PROHIBITED_PLATE = 6;
+const int MTL_PROHIBITED_PIPE = 7;
+const int MTL_PROHIBITED_FEET = 8;
+const int MTL_WALL_NO_SMOKING = 9;
 
-const int MTLMOD_SCRATCH = 20;
+const int MTLMOD_SCRATCH = 1;
 
 const float TAU = 2 * acos(-1);
 const float FAR = 100.0;
@@ -357,9 +356,14 @@ void main() {
         isectBox(isect2, ro - vec3(-1.6, 0.0, 1.4), rd, vec3(0.02, 3.0, 0.1));
         isectBox(isect2, ro - vec3(1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
         isectBox(isect2, ro - vec3(-1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(-1.6, 0.4, -2.0), rd, vec3(0.01, 0.06, 0.1));
         if (isect2.w < isect.w) {
           isect = isect2;
-          material = mat3(MTL_WALL_BAR);
+          material = mat3(
+            vec3(0.5),
+            vec3(0),
+            vec3(0.4, 1.0, 0.0)
+          );
         }
 
         // ceil
@@ -465,12 +469,6 @@ void main() {
               ));
             }
           }
-        } else if (material[2].z == MTL_WALL_BAR) {
-          material = mat3(
-            vec3(0.5),
-            vec3(0),
-            vec3(0.4, 1.0, 0.0)
-          );
         } else if (material[2].z == MTL_WALL_NO_SMOKING) {
           vec2 pp = material[0].zy;
           if (pp.x < -0.08) {
