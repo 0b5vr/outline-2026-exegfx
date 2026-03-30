@@ -806,22 +806,6 @@ vec4 draw() {
 
         seed = hash3f(seed);
 
-        if (material[2].z != MTL_CHROME_SPHERE) {
-          // is not chrome sphere
-
-          // dirt
-          float i_noiseDirt = 0.2 * smoothstep(0.0, 1.0, cyclicNoise(rp).x);
-          material[2].x = mix(material[2].x, 1.0, i_noiseDirt);
-
-          // black water
-          float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp).y - rp.y + 0.3);
-          if (i_noiseWater > seed.x) {
-            material[0] = vec3(0);
-            material[1] = vec3(0);
-            material[2].x = 0.04;
-          }
-        }
-
         if (material[2].z == MTLMOD_SCRATCH) {
           vec3 i_nDisplace = 20.0 * cyclicNoise(1.0 * rp.xyz);
           float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 8);
