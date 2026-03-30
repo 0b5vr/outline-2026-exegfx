@@ -341,10 +341,10 @@ vec4 draw() {
 
         // gutter
         isect2 = vec4(FAR);
-        isectBox(isect2, ro - vec3(0.0, -1.0, 10.0), rd, vec3(1.6, 0.98, 100));
+        isectBox(isect2, ro + 0.03, rd, vec3(100.0, 0.0, 100.0));
         if (isect2.w < isect.w) {
           isect = isect2;
-          material = mat3(MTL_WALL);
+          material = mat3(0);
         }
 
         // wall
@@ -632,6 +632,12 @@ vec4 draw() {
                 vec3(0.5, 0.0, MTLMOD_SCRATCH)
               );
             }
+          }
+
+          // black water
+          float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp).y + 0.3);
+          if (i_noiseWater > seed.x) {
+            material = mat3(0);
           }
         } else if (material[2].z == MTL_CEIL) {
           vec2 p = rp.xz;
