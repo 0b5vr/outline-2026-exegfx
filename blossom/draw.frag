@@ -433,24 +433,30 @@ void main() {
             );
             vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.093, 0.043), 0.003);
             vec3 dice = hash3f(tileCenter.xyy);
-            vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp));
+            vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp * 2.0));
 
+            // gutter
             material = mat3(
-              vec3(0.1 + 0.6 * noise.x),
+              vec3(0.1 + 0.5 * noise.x),
               vec3(0),
               vec3(0.8, 0.0, 0.0)
             );
 
             if (sdgTile.z < 0.0) {
               material = mat3(
-                mix(
                   pow(vec3(0.9, 0.7, 0.5), vec3(exp2(0.5 * dice.z))),
-                  vec3(0.6 * noise.x),
-                  0.2 * noise.y
-                ),
                 vec3(0),
-                vec3(0.2 + 0.3 * noise.y, 0.0, 0.0)
+                vec3(0.14, 0.0, 0.0)
               );
+
+              // dirt
+              if (noise.y * 0.3 > seed.x) {
+                material = mat3(
+                  vec3(0.6 * noise.x),
+                vec3(0),
+                  vec3(0.5, 0.0, 0.0)
+              );
+              }
 
               vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
               isect.xyz = normalize(basis * vec3(
