@@ -446,7 +446,7 @@ void main() {
               material = mat3(
                 pow(vec3(0.9, 0.7, 0.5), vec3(exp2(0.5 * dice.z))),
                 vec3(0),
-                vec3(0.14, 0.0, 0.0)
+                vec3(0.2, 0.0, 0.0)
               );
 
               // dirt
@@ -460,7 +460,7 @@ void main() {
 
               vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
               isect.xyz = normalize(basis * vec3(
-                i_nEdge + 0.03 * (dice.xy - 0.5),
+                i_nEdge + 0.01 * (dice.xy - 0.5),
                 2.0
               ));
             }
@@ -574,7 +574,7 @@ void main() {
               vec2 i_nEdge = step(abs(sdgTile.z), 0.004) * sdgTile.xy;
               vec2 i_nEdgeTactile = step(abs(sdgTactile.z), 0.002) * sdgTactile.xy;
               isect.xyz = normalize(basis * vec3(
-                i_nEdge + i_nEdgeTactile + 0.03 * hash3f(tileCenter.xyy).xy,
+                i_nEdge + i_nEdgeTactile + 0.01 * hash3f(tileCenter.xyy).xy,
                 1
               ));
             }
@@ -593,7 +593,7 @@ void main() {
 
               vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
               isect.xyz = normalize(basis * vec3(
-                i_nEdge + 0.03 * hash3f(tileCenter.xyy).xy,
+                i_nEdge + 0.01 * hash3f(tileCenter.xyy).xy,
                 2
               ));
             }
