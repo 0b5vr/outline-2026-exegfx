@@ -217,7 +217,7 @@ void main() {
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
       rd = normalize(rd - ro);
 
-      vec3 beta = vec3(2.0 - length(p));
+      vec3 beta = vec3(1.2 - length(p) * length(p));
 
       for (int i = 0; i ++ < PATH_ITER;) {
         mat3 material;
