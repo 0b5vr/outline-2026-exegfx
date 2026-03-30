@@ -250,15 +250,15 @@ void main() {
         isectBox(isect2, ro, rd, vec3(0.45, 0.3, 0.0));
         if (isect2.w < isect.w) {
           vec3 rp = ro + rd * isect2.w;
-          float i_dProhibitedPlate = max(
+          float dProhibitedPlate = max(
             sdgbox2(rp.xy, vec2(0.45, 0.3), 0.0).z,
-            -sdgbox2(abs(abs(rp.xy - vec2(0.0, 0.28)) - vec2(0.3, 0.0)), vec2(0.015, 0.0), 0.01).z
-          ) + 0.01 * cyclicNoise(10.0 * rp).x;
-          if (i_dProhibitedPlate < 0.0) {
+            -sdgbox2(abs(abs(rp.xy - vec2(0.0, 0.28)) - vec2(0.3, 0.0)), vec2(0.015, 0.0), 0.005).z
+          ) + 0.01 * cyclicNoise(8.0 * rp).x;
+          if (dProhibitedPlate < 0.0) {
             isect = isect2;
             material = mat3(
               vec3(rp),
-              vec3(0),
+              vec3(dProhibitedPlate),
               vec3(MTL_PROHIBITED_PLATE)
             );
             isect.zx *= rotate2D(-i_prohibitedRot);
@@ -699,6 +699,7 @@ void main() {
           }
         } else if (material[2].z == MTL_PROHIBITED_PLATE) {
           vec2 pt = material[0].xy / vec2(0.012, 0.016);
+          float dProhibitedPlate = material[1].x;
 
           if (abs(pt.y) > 16.0) {
             material = mat3(
@@ -754,10 +755,11 @@ void main() {
               : vec3(1);
           }
 
+          float stain = exp(exp(5.0 + 2.0 * cyclicNoise(rp * 4.0).y) * max(-0.04, dProhibitedPlate));
           material = mat3(
-            mix(vec3(0.04), vec3(0.9), material[0]),
+            mix(vec3(0.04), vec3(0.9), material[0]) * pow(vec3(0.3, 0.1, 0.01), vec3(stain)),
             vec3(0),
-            vec3(0.1, 0.0, MTLMOD_SCRATCH)
+            vec3(mix(0.2, 1.0, stain), 0.0, MTLMOD_SCRATCH)
           );
 
           isect.xyz = normalize(isect.xyz);
