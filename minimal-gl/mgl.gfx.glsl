@@ -44,7 +44,7 @@ const float FAR = 100.0;
 const int SAMPLES_PER_FRAME = 10;
 const float SAMPLES_PER_FRAME_F = 10.0;
 const int PATH_ITER = 5;
-const int MARCH_ITER = 80;
+const int MARCH_ITER = 120;
 
 float mgl_frame;
 
@@ -205,8 +205,8 @@ float mapChrome(vec3 p) {
       2.5 - p.y,
       2.0
     ),
-    p.y,
-    1.0
+    length(vec2(p.x - clamp(p.x, -1.5, 1.5), p.y)),
+    1.5
   );
 }
 
@@ -420,9 +420,9 @@ vec4 draw() {
             ));
             isect = vec4(i_n, rl);
             material = mat3(
-              mix(vec3(0), vec3(0.6, 0.68, 0.7), smoothstep(0.0, 0.5, rp.y)),
+              vec3(0.6, 0.67, 0.7),
               vec3(0),
-              vec3(0.04, 1.0, MTL_CHROME_SPHERE)
+              vec3(0.0, 1.0, MTL_CHROME_SPHERE)
             );
           }
         }
