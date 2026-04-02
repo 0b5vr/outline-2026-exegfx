@@ -225,13 +225,14 @@ void main() {
 
         // -- intersect stuff ------------------------------------------------------------------------
         // exit sign
-        const vec3 i_exitSignPos = vec3(0.0, 2.35, -2.0);
+        const vec3 i_exitSignPos = vec3(0.0, 2.5, -2.0);
+        const vec3 i_exitSignUVOriginPos = vec3(0.0, 2.32, -2.0);
         // isect2 = vec4(FAR);
-        isectBox(isect2, ro - i_exitSignPos, rd, vec3(0.15, 0.15, 0.05));
+        isectBox(isect2, ro - i_exitSignPos, rd, vec3(0.15, 0.33, 0.05));
         if (isect2.w < isect.w) {
           isect = isect2;
           material = mat3(
-            vec3(ro + rd * isect.w - i_exitSignPos),
+            vec3(ro + rd * isect.w - i_exitSignUVOriginPos),
             vec3(0),
             vec3(MTL_EXIT_SIGN)
           );
