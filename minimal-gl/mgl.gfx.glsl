@@ -215,11 +215,6 @@ vec4 draw() {
   vec2 p = gl_FragCoord.xy / resolution.xy - 0.5;
   p.x *= resolution.x / resolution.y;
 
-  #ifdef INTERACTIVE_ZOOM
-    p *= exp2(cameraInWorld[3].z);
-    p += cameraInWorld[3].xy;
-  #endif
-
   if (abs(p.x) < 0.7) {
     vec3 seed = hash3f(vec3(p, mgl_frame));
 
@@ -227,6 +222,11 @@ vec4 draw() {
       // -- create ray -------------------------------------------------------------------------------
       vec2 pt = (p * rotate2D(0.01) + seed.xy / resolution.y);
       seed = hash3f(seed);
+
+      #ifdef INTERACTIVE_ZOOM
+        pt *= exp2(cameraInWorld[3].z);
+        pt += cameraInWorld[3].xy;
+      #endif
 
       const float i_focalDepth = 11.1;
       #ifdef INTERACTIVE_CAMERA
@@ -242,7 +242,7 @@ vec4 draw() {
         rd = normalize(rd - ro);
       #endif
 
-      vec3 beta = vec3(1.2 - length(p) * length(p));
+      vec3 beta = vec3(1.2 - length(pt) * length(pt));
 
       for (int i = 0; i ++ < PATH_ITER;) {
         mat3 material;
