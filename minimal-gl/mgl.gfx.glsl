@@ -265,7 +265,7 @@ vec4 draw() {
         }
 
         // prohibited sign
-        const float i_phoribitedOffsetZ = -0.4;
+        const float i_phoribitedOffsetZ = -0.5;
         ro.z -= i_phoribitedOffsetZ;
         const float i_prohibitedRot = 0.2;
         ro.zx *= rotate2D(i_prohibitedRot);
@@ -647,7 +647,7 @@ vec4 draw() {
           }
 
           // black water
-          float i_noiseWater = smoothstep(0.0, 1.0, 0.2 - cyclicNoise(rp).y);
+          float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp + 5.0).y);
           if (i_noiseWater > seed.x) {
             material = mat3(0);
           }
