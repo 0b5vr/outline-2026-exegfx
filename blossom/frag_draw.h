@@ -361,7 +361,7 @@ const char *draw_frag =
                          "m=mat3(vec3(v.x==-.25?"
                            ".2:"
                            ".4),vec3(0),vec3(.4,0,0)),y.xyz=normalize(c*vec3(step(abs(z.z+.002),.002)*z.xy+.01*f(v.xyy).xy,2));"
-                       "bool w=x.x<0.;"
+                       "bool w=x.x>0.;"
                        "x=vec2(abs(abs(x.x)-.68),(x.y-.78)*sign(x.x));"
                        "z=f(x,vec2(.15),.05);"
                        "if((z+.04*max(n(e*10.),0.)).z<0.)"

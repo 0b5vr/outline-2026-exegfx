@@ -623,7 +623,7 @@ vec4 draw() {
             }
 
             // direction sign
-            bool side = p.x < 0.0;
+            bool side = p.x > 0.0;
             p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.78) * sign(p.x));
             vec3 sdgDir = sdgbox2(p, vec2(0.15), 0.05);
             if ((sdgDir + 0.04 * max(cyclicNoise(rp * 10.0), 0.0)).z < 0.0) {
