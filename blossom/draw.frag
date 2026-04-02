@@ -613,7 +613,7 @@ void main() {
           }
 
           // black water
-          float i_noiseWater = smoothstep(0.0, 1.0, cyclicNoise(rp).y + 0.3);
+          float i_noiseWater = smoothstep(0.0, 1.0, 0.2 - cyclicNoise(rp).y);
           if (i_noiseWater > seed.x) {
             material = mat3(0);
           }

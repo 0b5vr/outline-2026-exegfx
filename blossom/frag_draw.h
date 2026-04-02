@@ -369,7 +369,7 @@ const char *draw_frag =
                            "vec3(.1,.1,.3):"
                            "vec3(.9),vec3(0),vec3(.5,0,1));"
                      "}"
-                   "if(smoothstep(0.,1.,n(e).y+.3)>w.x)"
+                   "if(smoothstep(0.,1.,.2-n(e).y)>w.x)"
                      "m=mat3(0);"
                  "}"
                "else if(m[2].z==3)"
