@@ -474,10 +474,11 @@ vec4 draw() {
             );
 
             if (sdgTile.z < 0.0) {
+              // tiles
               material = mat3(
                 pow(vec3(0.9, 0.7, 0.5), vec3(exp2(0.5 * dice.z))),
                 vec3(0),
-                vec3(0.2, 0.0, 0.0)
+                vec3(0.14, 0.0, 0.0)
               );
 
               vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
@@ -488,13 +489,12 @@ vec4 draw() {
             }
 
             // dirt
-            if (smoothstep(0.2, 1.0, cyclicNoise(rp / vec3(4, 1, 4)).z + exp((rp.y - 2.5) * 5.0)) * 0.4 > seed.x) {
-              material = mat3(
-                vec3(0.0),
-                vec3(0),
-                vec3(1.0, 0.0, 0.0)
-              );
-            }
+            float dirt = smoothstep(0.0, 1.0, cyclicNoise(rp + cyclicNoise(rp / vec3(4, 1, 4))).x + exp((rp.y - 2.5) * 5.0)) * 0.2;
+            material = mat3(
+              material[0] * (1.0 - dirt),
+              vec3(0),
+              mix(material[2], vec3(0.5, 0.0, 0.0), dirt)
+            );
           }
         } else if (material[2].z == MTL_WALL_NO_SMOKING) {
           vec2 pp = material[0].zy;
