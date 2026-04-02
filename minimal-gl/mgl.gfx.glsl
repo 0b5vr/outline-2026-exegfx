@@ -365,7 +365,7 @@ vec4 draw() {
         }
 
         // no smoking
-        const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, 0.0);
+        const vec3 i_noSmokingSignPos = vec3(1.6, 1.72, -0.5);
         ro -= i_noSmokingSignPos;
         isect2 = vec4(FAR);
         isectBox(isect2, ro, rd, vec3(0.01, 0.25, 0.5));
@@ -382,10 +382,10 @@ vec4 draw() {
 
         // wall bar
         isect2 = vec4(FAR);
-        isectBox(isect2, ro - vec3(1.6, 0.0, 1.4), rd, vec3(0.02, 3.0, 0.1));
-        isectBox(isect2, ro - vec3(-1.6, 0.0, 1.4), rd, vec3(0.02, 3.0, 0.1));
-        isectBox(isect2, ro - vec3(1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
-        isectBox(isect2, ro - vec3(-1.6, 0.0, -11.4), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(1.6, 0.0, 1.0), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(-1.6, 0.0, 1.0), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(1.6, 0.0, -11.0), rd, vec3(0.02, 3.0, 0.1));
+        isectBox(isect2, ro - vec3(-1.6, 0.0, -11.0), rd, vec3(0.02, 3.0, 0.1));
         isectBox(isect2, ro - vec3(-1.6, 0.4, -2.0), rd, vec3(0.01, 0.06, 0.1));
         if (isect2.w < isect.w) {
           isect = isect2;
