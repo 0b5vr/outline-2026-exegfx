@@ -441,7 +441,7 @@ void main() {
 
             // gutter
             material = mat3(
-              vec3(0.1 + 0.5 * noise.x),
+              vec3(0.1 + 0.4 * noise.x),
               vec3(0),
               vec3(0.8, 0.0, 0.0)
             );
@@ -454,7 +454,7 @@ void main() {
               );
 
               // dirt
-              if (noise.y * 0.3 > seed.x) {
+              if (noise.y * 0.2 > seed.x) {
                 material = mat3(
                   vec3(0.6 * noise.x),
                   vec3(0),
