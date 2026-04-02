@@ -437,13 +437,12 @@ void main() {
               (floor(rpt.x / 0.2 + mod(tileY, 2.0) * 0.5) - mod(tileY, 2.0) * 0.5) * 0.2 + 0.1,
               tileY * 0.1 + 0.05
             );
-            vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.093, 0.043), 0.003);
+            vec3 sdgTile = sdgbox2(rpt.xy - tileCenter, vec2(0.095, 0.045), 0.003) + max(cyclicNoise(rp * 80.0) * 0.001, 0.0);
             vec3 dice = hash3f(tileCenter.xyy);
-            vec3 noise = 0.5 + 0.5 * sin(3.0 * cyclicNoise(rp * 2.0));
 
             // gutter
             material = mat3(
-              vec3(0.1 + 0.4 * noise.x),
+              vec3(0.2, 0.18, 0.15) * exp(cyclicNoise(rp * 2.0) + cyclicNoise(rp * 20.0)).x,
               vec3(0),
               vec3(0.8, 0.0, 0.0)
             );
@@ -455,20 +454,20 @@ void main() {
                 vec3(0.2, 0.0, 0.0)
               );
 
-              // dirt
-              if (noise.y * 0.2 > seed.x) {
-                material = mat3(
-                  vec3(0.6 * noise.x),
-                  vec3(0),
-                  vec3(0.5, 0.0, 0.0)
-                );
-              }
-
               vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
               isect.xyz = normalize(basis * vec3(
                 i_nEdge + 0.01 * (dice.xy - 0.5),
                 2.0
               ));
+            }
+
+            // dirt
+            if (smoothstep(0.2, 1.0, cyclicNoise(rp / vec3(4, 1, 4)).z + exp((rp.y - 2.5) * 5.0)) * 0.4 > seed.x) {
+              material = mat3(
+                vec3(0.0),
+                vec3(0),
+                vec3(1.0, 0.0, 0.0)
+              );
             }
           }
         } else if (material[2].z == MTL_WALL_NO_SMOKING) {
