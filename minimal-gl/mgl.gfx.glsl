@@ -486,7 +486,7 @@ vec4 draw() {
 
               vec2 i_nEdge = step(abs(sdgTile.z), 0.002) * sdgTile.xy;
               isect.xyz = normalize(basis * vec3(
-                i_nEdge + 0.01 * (dice.xy - 0.5),
+                i_nEdge + 0.02 * (dice.xy - 0.5),
                 2.0
               ));
             }

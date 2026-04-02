@@ -273,7 +273,7 @@ const char *draw_frag =
                      "vec3 w=f(r.xy-z,vec2(.095,.045),.003)+max(p(c*80.)*.001,0.),x=f(z.xyy);"
                      "m=mat3(vec3(.2,.18,.15)*exp(p(c*2.)+p(c*20.)).x,vec3(0),vec3(.8,0,0));"
                      "if(w.z<0.)"
-                       "m=mat3(pow(vec3(.9,.7,.5),vec3(exp2(.5*x.z))),vec3(0),vec3(.14,0,0)),y.xyz=normalize(d*vec3(step(abs(w.z),.002)*w.xy+.01*(x.xy-.5),2));"
+                       "m=mat3(pow(vec3(.9,.7,.5),vec3(exp2(.5*x.z))),vec3(0),vec3(.14,0,0)),y.xyz=normalize(d*vec3(step(abs(w.z),.002)*w.xy+.02*(x.xy-.5),2));"
                      "v=smoothstep(0.,1.,p(c+p(c/vec3(4,1,4))).x+exp((c.y-2.5)*5.))*.2;"
                      "m=mat3(m[0]*(1.-v),vec3(0),mix(m[2],vec3(.5,0,0),v));"
                    "}"
