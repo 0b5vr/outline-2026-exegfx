@@ -547,15 +547,17 @@ void main() {
 
           // gap
           material = mat3(
-            vec3(0.1 + 0.1 * sin(3.0 * cyclicNoise(2.0 * p.xxy).x)),
+            vec3(0.2, 0.18, 0.15) * exp2(cyclicNoise(10.0 * rp).x),
             vec3(0),
             vec3(0.8, 0.0, 0.0)
           );
 
+          const float i_tactileOffset = 0.02;
+          p += i_tactileOffset;
           vec2 tileCenter = floor(p / 0.3) * 0.3 + 0.15;
           if (tileCenter.x == 0.15) {
             // tactile
-            vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.135), 0.01);
+            vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.14), 0.005);
 
             if (sdgTile.z < 0.0) {
               material = mat3(
@@ -579,16 +581,19 @@ void main() {
               ));
             }
           } else {
+            p -= i_tactileOffset;
+
             // tiles
             tileCenter = floor(p / 0.5) * 0.5 + 0.25;
-            vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.235), 0.01);
+            vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.242), 0.005);
 
             if (sdgTile.z < 0.0) {
               // tile
+              float mtlNoise = smoothstep(0.2, 1.0, cyclicNoise(rp * 400.0 + 2.0 * cyclicNoise(rp * 100.0))).x;
               material = mat3(
-                vec3(tileCenter.x == -0.25 ? 0.2 : 0.4),
+                vec3(tileCenter.x == -0.25 ? 0.3 : 0.8) * (1.0 - 0.9 * mtlNoise),
                 vec3(0),
-                vec3(0.4, 0.0, 0.0)
+                vec3(0.4 - 0.3 * mtlNoise, 0.0, 0.0)
               );
 
               vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
