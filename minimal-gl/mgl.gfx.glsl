@@ -1,5 +1,6 @@
 #version 430	/* version ディレクティブが必要な場合は必ず 1 行目に書くこと */
 
+// #define INTERACTIVE_ZOOM
 // #define INTERACTIVE_CAMERA
 // #define DEBUG_GRID
 // #define DEBUG_NORMAL
@@ -15,10 +16,8 @@ layout(location = 0) uniform int waveOutPosition;
 #else
   layout(location = 2) uniform float time;
   layout(location = 3) uniform vec2 resolution;
-  #ifdef INTERACTIVE_CAMERA
-    layout(location = 6) uniform float tanFovY;
-    layout(location = 7) uniform mat4 cameraInWorld;
-  #endif
+  layout(location = 6) uniform float tanFovY;
+  layout(location = 7) uniform mat4 cameraInWorld;
 #endif
 
 layout(location = 0) out vec4 outColor;   // display (tonemapped)
@@ -215,6 +214,11 @@ vec4 draw() {
 
   vec2 p = gl_FragCoord.xy / resolution.xy - 0.5;
   p.x *= resolution.x / resolution.y;
+
+  #ifdef INTERACTIVE_ZOOM
+    p *= exp2(cameraInWorld[3].z);
+    p += cameraInWorld[3].xy;
+  #endif
 
   if (abs(p.x) < 0.7) {
     vec3 seed = hash3f(vec3(p, mgl_frame));
@@ -966,7 +970,7 @@ vec3 present(vec3 color) {
 
 // == main =========================================================================================
 void main() {
-  #ifdef INTERACTIVE_CAMERA
+  #if defined(INTERACTIVE_ZOOM) || defined(INTERACTIVE_CAMERA)
     vec3 cameraStateHash = hash3f(
       cameraInWorld[0].xyz
       + cameraInWorld[1].xyz
