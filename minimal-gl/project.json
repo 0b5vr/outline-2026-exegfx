@@ -2,8 +2,8 @@
 	"app":	{
 		"graphicsShaderFileName":	".\\mgl.gfx.glsl",
 		"soundShaderFileName":	".\\silent.snd.glsl",
-		"xReso":	958,
-		"yReso":	464
+		"xReso":	480,
+		"yReso":	270
 	},
 	"camera":	{
 		"vec3Pos":	[-1.2799251079559326, 1.6179497241973877, 9.47287082672119],
