@@ -373,7 +373,7 @@ const char *draw_frag =
                        "bool w=x.x>0.;"
                        "x=vec2(abs(abs(x.x)-.68),(x.y-.78)*sign(x.x));"
                        "z=f(x,vec2(.15),.05);"
-                       "if((z+.04*max(p(l*10.),0.)).z<0.)"
+                       "if((z+.01*max(p(l*10.),0.)).z<0.)"
                          "m=mat3((z.z>-.01||abs(x.x)<.16&&abs(x.x-x.y-.08)<.05)^^w?"
                            "vec3(.1,.1,.3):"
                            "vec3(.9),vec3(0),vec3(.5,0,1));"
