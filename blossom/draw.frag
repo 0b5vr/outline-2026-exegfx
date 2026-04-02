@@ -208,11 +208,12 @@ void main() {
       vec2 pt = (p * rotate2D(0.01) + seed.xy / resolution.y);
       seed = hash3f(seed);
 
+      const float i_focalDepth = 11.5;
       vec3 ro = vec3(-0.1, 1.6, 11.0);
       vec3 rd = normalize(vec3(pt, -4.0));
       rd.zx *= rotate2D(0.01);
       rd.yz *= rotate2D(0.045);
-      rd = ro + rd * 10.0; // rd is temporarily ray target
+      rd = ro + rd * i_focalDepth; // rd is temporarily ray target
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
       rd = normalize(rd - ro);
 

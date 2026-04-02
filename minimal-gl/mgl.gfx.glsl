@@ -228,7 +228,7 @@ vec4 draw() {
         pt += cameraInWorld[3].xy;
       #endif
 
-      const float i_focalDepth = 11.1;
+      const float i_focalDepth = 11.5;
       #ifdef INTERACTIVE_CAMERA
         vec3 ro = cameraInWorld[3].xyz;
         vec3 rd = mat3(cameraInWorld) * normalize(vec3(pt * tanFovY, -1));
@@ -237,7 +237,7 @@ vec4 draw() {
         vec3 rd = normalize(vec3(pt, -4.0));
         rd.zx *= rotate2D(0.01);
         rd.yz *= rotate2D(0.045);
-        rd = ro + rd * 10.0; // rd is temporarily ray target
+        rd = ro + rd * i_focalDepth; // rd is temporarily ray target
         ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
         rd = normalize(rd - ro);
       #endif
