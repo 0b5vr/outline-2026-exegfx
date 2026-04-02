@@ -629,15 +629,16 @@ void main() {
             );
           } else {
             p = rp.xz;
-            float i_tileZ = (floor(rp.z / 0.2) + 0.5) * 0.2;
+            float tileZCoord = (floor(rp.z / 0.2) + 0.5) * 0.2 - rp.z;
 
-            if (abs(i_tileZ - rp.z) < 0.09) {
+            if (abs(tileZCoord) < 0.09) {
               // panels
               material = mat3(
                 vec3(0.8),
                 vec3(0),
-                vec3(0.4, 0.0, 0.0)
+                vec3(0.3, 0.0, 0.0)
               );
+              isect.xyz = normalize(isect.xyz - vec3(0, 0, tileZCoord));
             } else {
               // gap
               material = mat3(
