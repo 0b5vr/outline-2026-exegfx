@@ -424,10 +424,11 @@ void main() {
         if (material[2].z == MTL_WALL) {
           if (rp.y < 0.2) {
             // floor plate
+            float stain = smoothstep(0.0, 1.0, cyclicNoise(rp * 4.0) + 4.0 * exp(40.0 * (rp.y - 0.2))).x;
             material = mat3(
-              vec3(0.1),
+              vec3(0.1 + 0.2 * stain),
               vec3(0),
-              vec3(0.4, 0.0, 0.0)
+              vec3(0.4 + 0.6 * stain, 0.0, 0.0)
             );
           } else {
             // brick wall
