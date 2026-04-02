@@ -242,7 +242,7 @@ vec4 draw() {
         rd = normalize(rd - ro);
       #endif
 
-      vec3 beta = vec3(1.2 - length(pt) * length(pt));
+      vec3 beta = vec3(1.0 - length(pt) * length(pt));
 
       for (int i = 0; i ++ < PATH_ITER;) {
         mat3 material;
@@ -265,6 +265,8 @@ vec4 draw() {
         }
 
         // prohibited sign
+        const float i_phoribitedOffsetZ = -0.4;
+        ro.z -= i_phoribitedOffsetZ;
         const float i_prohibitedRot = 0.2;
         ro.zx *= rotate2D(i_prohibitedRot);
         rd.zx *= rotate2D(i_prohibitedRot);
@@ -334,6 +336,7 @@ vec4 draw() {
 
         rd.zx *= rotate2D(-i_prohibitedRot);
         ro.zx *= rotate2D(-i_prohibitedRot);
+        ro.z += i_phoribitedOffsetZ;
 
         // floor
         isect2 = vec4(FAR);
@@ -655,7 +658,7 @@ vec4 draw() {
             // light
             material = mat3(
               vec3(0.3),
-              vec3(10.0),
+              vec3(8.0),
               vec3(0.04, 1.0, 0.0)
             );
           } else if (abs(p.x) < 0.72 && abs(p.y) < 0.22) {
