@@ -632,6 +632,13 @@ void main() {
               vec3(10.0),
               vec3(0.04, 1.0, 0.0)
             );
+          } else if (abs(p.x) < 0.72 && abs(p.y) < 0.22) {
+            // frame of light
+            material = mat3(
+              vec3(0.5),
+              vec3(0),
+              vec3(0.1, 1.0, 0.0)
+            );
           } else {
             p = rp.xz;
             float tileZCoord = (floor(rp.z / 0.2) + 0.5) * 0.2 - rp.z;
