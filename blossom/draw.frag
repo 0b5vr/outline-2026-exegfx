@@ -465,15 +465,15 @@ void main() {
                 2.0
               ));
             }
-
-            // dirt
-            float dirt = smoothstep(0.0, 1.0, cyclicNoise(rp + cyclicNoise(rp / vec3(4, 1, 4))).x + exp((rp.y - 2.5) * 5.0)) * 0.2;
-            material = mat3(
-              material[0] * (1.0 - dirt),
-              vec3(0),
-              mix(material[2], vec3(0.5, 0.0, 0.0), dirt)
-            );
           }
+
+          // dirt
+          float dirt = smoothstep(0.0, 1.0, cyclicNoise(rp + cyclicNoise(rp / vec3(4, 1, 4))).x + exp((rp.y - 2.5) * 5.0)) * 0.2;
+          material = mat3(
+            material[0] * (1.0 - dirt),
+            vec3(0),
+            mix(material[2], vec3(0.5, 0.0, 0.0), dirt)
+          );
         } else if (material[2].z == MTL_WALL_NO_SMOKING) {
           vec2 pp = material[0].zy;
           if (pp.x < -0.08) {
@@ -555,7 +555,7 @@ void main() {
             vec3(0.8, 0.0, 0.0)
           );
 
-          const float i_tactileOffset = 0.02;
+          const float i_tactileOffset = 0.01;
           p += i_tactileOffset;
           vec2 tileCenter = floor(p / 0.3) * 0.3 + 0.15;
           if (tileCenter.x == 0.15) {
@@ -593,10 +593,11 @@ void main() {
             if (sdgTile.z < 0.0) {
               // tile
               float mtlNoise = smoothstep(0.2, 1.0, cyclicNoise(rp * 400.0 + 2.0 * cyclicNoise(rp * 100.0))).x;
+              float dirt = exp(exp(6.0 + cyclicNoise(rp * 6.0).x) * sdgTile.z) * 0.6;
               material = mat3(
-                vec3(tileCenter.x == -0.25 ? 0.3 : 0.8) * (1.0 - 0.9 * mtlNoise),
+                vec3(tileCenter.x == -0.25 ? 0.3 : 0.8) * (1.0 - 0.9 * mtlNoise) * (1.0 - dirt),
                 vec3(0),
-                vec3(0.4 - 0.3 * mtlNoise, 0.0, 0.0)
+                vec3(mix(0.4 - 0.3 * mtlNoise, 1.0, dirt), 0.0, 0.0)
               );
 
               vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
