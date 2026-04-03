@@ -617,12 +617,12 @@ vec4 draw() {
 
             if (sdgTile.z < 0.0) {
               // tile
-              float mtlNoise = smoothstep(0.2, 1.0, cyclicNoise(rp * 400.0 + 2.0 * cyclicNoise(rp * 100.0))).x;
-              float dirt = exp(exp(6.0 + cyclicNoise(rp * 6.0).x) * sdgTile.z) * 0.6;
+              float mtlNoise = smoothstep(0.2, 1.0, cyclicNoise(rp * 140.0 + 2.0 * cyclicNoise(rp * 10.0))).x;
+              float dirt = exp(exp(5.0 + cyclicNoise(rp * 4.0).x) * sdgTile.z) * 0.3;
               material = mat3(
-                vec3(tileCenter.x == -0.25 ? 0.3 : 0.8) * (1.0 - 0.9 * mtlNoise) * (1.0 - dirt),
+                vec3(tileCenter.x == -0.25 ? 0.3 : 0.8) * (1.0 - 0.6 * mtlNoise) * (1.0 - dirt),
                 vec3(0),
-                vec3(mix(0.4 - 0.3 * mtlNoise, 1.0, dirt), 0.0, 0.0)
+                vec3(mix(0.15 - 0.15 * mtlNoise, 1.0, dirt), 0.0, 0.0)
               );
 
               vec2 i_nEdge = step(abs(sdgTile.z + 0.002), 0.002) * sdgTile.xy;
