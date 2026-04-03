@@ -799,7 +799,7 @@ vec4 draw() {
 
           float stain = exp(exp(5.0 + 2.0 * cyclicNoise(rp * 4.0).y) * max(-0.04, dProhibitedPlate));
           material = mat3(
-            mix(vec3(0.04), vec3(0.9), material[0]) * pow(vec3(0.3, 0.1, 0.01), vec3(stain)),
+            mix(vec3(0.04), vec3(0.9), material[0]) * pow(vec3(0.5, 0.2, 0.04), vec3(stain)),
             vec3(0),
             vec3(mix(0.2, 1.0, stain), 0.0, MTLMOD_SCRATCH)
           );

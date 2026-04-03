@@ -471,7 +471,7 @@ const char *draw_frag =
                          "vec3(1);"
                      "}"
                    "v=exp(exp(5.+2.*p(c*4.).y)*max(-.04,v));"
-                   "m=mat3(mix(vec3(.04),vec3(.9),m[0])*pow(vec3(.3,.1,.01),vec3(v)),vec3(0),vec3(mix(.2,1.,v),0,1));"
+                   "m=mat3(mix(vec3(.04),vec3(.9),m[0])*pow(vec3(.5,.2,.04),vec3(v)),vec3(0),vec3(mix(.2,1.,v),0,1));"
                    "y.xyz=normalize(y.xyz);"
                  "}"
                "else if(m[2].z==7)"
