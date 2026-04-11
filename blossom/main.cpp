@@ -34,7 +34,6 @@ GLuint fbAccumulator;
 // uniform bindings
 int const kUniformResolution = 0;
 int const kUniformFrame = 1;
-int const kSamplerAccumulatorTex = 0;
 
 // === resolutions ===
 #if WINDOW_AUTO_SIZE
