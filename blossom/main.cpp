@@ -245,7 +245,6 @@ int main()
 	// main accumulator loop
 	accumulatorSetup();
 #if !DESPERATE
-	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 #endif
 	for (
