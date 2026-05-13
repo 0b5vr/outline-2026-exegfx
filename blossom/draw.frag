@@ -563,12 +563,6 @@ void main() {
             vec3 sdgTile = sdgbox2(p - tileCenter, vec2(0.14), 0.005);
 
             if (sdgTile.z < 0.0) {
-              material = mat3(
-                vec3(0.8, 0.5, 0.1),
-                vec3(0),
-                vec3(0.1, 0.0, MTLMOD_SCRATCH)
-              );
-
               p -= tileCenter;
               p.x -= (floor(p.x / 0.07) + 0.5) * 0.07;
               vec3 sdgTactile = sdgbox2(
@@ -576,6 +570,14 @@ void main() {
                 vec2(0.0, 0.11),
                 0.015
               );
+              float dirt = 0.6 * clamp(exp(-exp(6.0 + cyclicNoise(rp * 8.0).y) * abs(sdgTactile.z)), 0.0, 1.0);
+
+              material = mat3(
+                mix(vec3(0.8, 0.5, 0.1), vec3(0.0), dirt),
+                vec3(0),
+                vec3(mix(0.1, 0.5, dirt), 0.0, MTLMOD_SCRATCH)
+              );
+
               vec2 i_nEdge = step(abs(sdgTile.z), 0.004) * sdgTile.xy;
               vec2 i_nEdgeTactile = step(abs(sdgTactile.z), 0.002) * sdgTactile.xy;
               isect.xyz = normalize(basis * vec3(
