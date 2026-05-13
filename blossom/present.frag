@@ -38,7 +38,7 @@ void main() {
   );
 
   // color grading
-  color = sign(tex.a) * mix(vec3(0.1), vec3(0.8, 0.9, 1.0), color);
+  color = sign(tex.a) * mix(vec3(0.05), vec3(0.8, 0.9, 1.0), color);
 
   fragColor = vec4(color, 1);
 }

@@ -209,10 +209,10 @@ void main() {
       seed = hash3f(seed);
 
       const float i_focalDepth = 11.5;
-      vec3 ro = vec3(-0.1, 1.6, 11.0);
+      vec3 ro = vec3(-0.1, 1.5, 11.0);
       vec3 rd = normalize(vec3(pt, -4.0));
       rd.zx *= rotate2D(0.01);
-      rd.yz *= rotate2D(0.045);
+      rd.yz *= rotate2D(0.025);
       rd = ro + rd * i_focalDepth; // rd is temporarily ray target
       ro += 0.01 * vec3(cis(TAU * seed.z) * sqrt(seed.y), 0.0);
       rd = normalize(rd - ro);
@@ -611,7 +611,7 @@ void main() {
 
             // direction sign
             bool side = p.x > 0.0;
-            p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.78) * sign(p.x));
+            p = vec2(abs(abs(p.x) - 0.68), (p.y - 0.38) * sign(p.x));
             vec3 sdgDir = sdgbox2(p, vec2(0.15), 0.05);
             if ((sdgDir + 0.01 * max(cyclicNoise(rp * 10.0), 0.0)).z < 0.0) {
               bool i_shape = (sdgDir.z > -0.01 || abs(p.x) < 0.16 && abs(p.x - p.y - 0.08) < 0.05) ^^ side;
