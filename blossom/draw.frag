@@ -909,7 +909,7 @@ void main() {
         }
       }
     }
-  }
 
-  fragColor.w = SAMPLES_PER_FRAME_F;
+    fragColor.w = SAMPLES_PER_FRAME_F;
+  }
 }

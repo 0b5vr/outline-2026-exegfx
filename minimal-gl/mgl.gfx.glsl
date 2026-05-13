@@ -944,20 +944,22 @@ vec4 draw() {
         }
       }
     }
+
+    fragColor.w = SAMPLES_PER_FRAME_F;
+
+    #ifdef DEBUG_GRID
+      vec2 grid = step(abs(fract(4.0 * p - 0.5) - 0.5) * resolution.y, vec2(4.0));
+      fragColor = mix(fragColor, vec4(1.0), 0.5 * max(grid.x, grid.y));
+    #endif
   }
-
-  fragColor.w = SAMPLES_PER_FRAME_F;
-
-  #ifdef DEBUG_GRID
-    vec2 grid = step(abs(fract(4.0 * p - 0.5) - 0.5) * resolution.y, vec2(4.0));
-    fragColor = mix(fragColor, vec4(1.0), 0.5 * max(grid.x, grid.y));
-  #endif
 
   return fragColor;
 }
 
 // == present ======================================================================================
-vec3 present(vec3 color) {
+vec4 present(vec4 tex) {
+  vec3 color = tex.rgb / tex.a;
+
   // ACES-like cringe tone mapping
   // Ref: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl
   color *= mat3(
@@ -984,9 +986,9 @@ vec3 present(vec3 color) {
   );
 
   // color grading
-  color = mix(vec3(0.1), vec3(0.8, 0.9, 1.0), color);
+  color = sign(tex.a) * mix(vec3(0.1), vec3(0.8, 0.9, 1.0), color);
 
-  return color;
+  return vec4(color, 1);
 }
 
 // == main =========================================================================================
@@ -1016,5 +1018,5 @@ void main() {
   mgl_frame = accumPrev.w;
 
   outAccum = accumPrev + draw();
-  outColor = vec4(present(outAccum.rgb / outAccum.a), 1.0);
+  outColor = vec4(present(outAccum));
 }

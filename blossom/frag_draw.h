@@ -515,8 +515,8 @@ const char *draw_frag =
                  "break;"
              "}"
          "}"
+       "v.w=10.;"
      "}"
-   "v.w=10.;"
  "}";
 
 #endif // FRAG_DRAW_H_
