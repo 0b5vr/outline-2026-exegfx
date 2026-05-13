@@ -256,7 +256,7 @@ void main() {
           float dProhibitedPlate = max(
             sdgbox2(rp.xy, vec2(0.45, 0.3), 0.0).z,
             -sdgbox2(abs(abs(rp.xy - vec2(0.0, 0.28)) - vec2(0.3, 0.0)), vec2(0.015, 0.0), 0.005).z
-          ) + 0.01 * cyclicNoise(8.0 * rp).x;
+          ) + 0.01 * cyclicNoise(rp * 8.0).x;
           if (dProhibitedPlate < 0.0) {
             isect = isect2;
             material = mat3(
@@ -550,7 +550,7 @@ void main() {
 
           // gap
           material = mat3(
-            vec3(0.2, 0.18, 0.15) * exp2(cyclicNoise(10.0 * rp).x),
+            vec3(0.2, 0.18, 0.15) * exp2(cyclicNoise(rp * 10.0).x),
             vec3(0),
             vec3(0.8, 0.0, 0.0)
           );
@@ -783,7 +783,7 @@ void main() {
 
           isect.xyz = normalize(isect.xyz);
         } else if (material[2].z == MTL_PROHIBITED_PIPE) {
-          float n = step(0.5, cyclicNoise(20.0 * rp).x);
+          float n = step(0.5, cyclicNoise(rp * 20.0).x);
 
           material = mat3(
             mix(
@@ -795,7 +795,7 @@ void main() {
             vec3(mix(0.4, 1.0, n), 0.0, MTLMOD_SCRATCH)
           );
 
-          isect.xyz = normalize(isect.xyz + 0.04 * cyclicNoise(80.0 * rp));
+          isect.xyz = normalize(isect.xyz + 0.04 * cyclicNoise(rp * 80.0));
         } else if (material[2].z == MTL_PROHIBITED_FEET) {
           material = mat3(
             vec3(0.3),
@@ -807,7 +807,7 @@ void main() {
         seed = hash3f(seed);
 
         if (material[2].z == MTLMOD_SCRATCH) {
-          vec3 i_nDisplace = 20.0 * cyclicNoise(1.0 * rp.xyz);
+          vec3 i_nDisplace = 20.0 * cyclicNoise(rp);
           float i_n = pow(0.5 + 0.5 * cyclicNoise(i_nDisplace).x, 8);
           if (i_n > seed.x) {
             material = mat3(
