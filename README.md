@@ -11,4 +11,5 @@ Made with [Blossom](https://github.com/lunasorcery/Blossom) ([Shader Minifier](h
 ![Screenshot](screenshot.png)
 
 - pouët: https://www.pouet.net/prod.php?which=106193
+- Demozoo: https://demozoo.org/graphics/391575/
 - Shadertoy: https://www.shadertoy.com/view/33KfDW
